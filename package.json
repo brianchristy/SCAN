@@ -1,0 +1,13 @@
+{
+  "name": "senior-assistance",
+  "version": "1.0.0",
+  "description": "Full-stack MERN app",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^6.5.1"
+  }
+}
