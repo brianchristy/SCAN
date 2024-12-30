@@ -44,41 +44,48 @@ Ensure you have the following installed:
    ```
    
 2. **Install Dependencies:**
- • For the backend:
-   ```bash
-   cd backend
-   npm install
-   ```
- • For the frontend:
-   ```bash
-   cd frontend
-   npm install
-   ```
    
-3. **Setup Environment Variables:**
- • In the backend folder, create a .env file and add the following:
-   ```env
-   MONGO_URI=your-mongodb-uri
-   JWT_SECRET=your-jwt-secret
-   EMAIL_USER=your-email-user
-   EMAIL_PASS=your-email-password
-   ```
- • Replace the placeholders with your actual values.
+    • For the backend:
+      ```bash
+      cd backend
+      npm install
+      ```
+      
+    • For the frontend:
+      ```bash
+      cd frontend
+      npm install
+      ```
+   
+4. **Setup Environment Variables:**
+   
+    • In the backend folder, create a .env file and add the following:
+   
+      ```env
+      MONGO_URI=your-mongodb-uri
+      JWT_SECRET=your-jwt-secret
+      EMAIL_USER=your-email-user
+      EMAIL_PASS=your-email-password
+      ```
+      
+    • Replace the placeholders with your actual values.
 
 
 4. **Run the Application:**
- • Start the backend:
-   ```bash
-   cd backend
-   npm start
-   ```
-• Start the frontend:
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+   
+    • Start the backend:
+      ```bash
+      cd backend
+      npm start
+      ```
+   • Start the frontend:
+      ```bash
+      cd frontend
+      npm run dev
+      ```
 
 5. **Access the Application: Open your browser and navigate to:**
+   
    ```arduino
    http://localhost:3000
    ```
@@ -103,15 +110,7 @@ Ensure you have the following installed:
 
 ## **Contributing**
 
-Contributions are welcome! Please follow these steps to contribute:
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature-name`).
-3. Commit your changes (`git commit -m 'Add a feature'`).
-4. Push to the branch (`git push origin feature-name`).
-5. Open a Pull Request.
-
-Ensure your code follows the project's style and passes all tests.
+Contributions are welcome! Please fork the repository and submit a pull request with your changes.
 
 ---
 
