@@ -13,7 +13,7 @@ const HomePage = () => {
       {/* Navbar */}
       <header className="w-full p-4 bg-blue-700 bg-opacity-70 text-white fixed top-0 left-0 flex justify-between items-center z-50 backdrop-blur-lg">
         <div className="text-xl font-bold">
-          <Link to="/">SCAN</Link>
+          <Link to="/">SNRCV</Link>
         </div>
         <nav>
           <ul className="flex space-x-8">
@@ -91,7 +91,7 @@ const HomePage = () => {
 
       {/* Footer */}
       <footer className="w-full p-4 bg-blue-700 bg-opacity-80 text-white text-center relative z-10">
-        <p>&copy; 2024 SCAN. All rights reserved.</p>
+        <p>&copy; 2024 SNRCV. All rights reserved.</p>
       </footer>
     </div>
   );

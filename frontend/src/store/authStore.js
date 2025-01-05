@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const API_URL =
   import.meta.env.MODE === "development"
@@ -66,7 +67,6 @@ export const useAuthStore = create((set) => ({
         isLoading: false,
       });
 
-      // Optionally, you can redirect the user to the login page after signing out
       window.location.href = "/login"; // Redirect to login page after signout
 
       console.log("User signed out successfully");
@@ -101,6 +101,28 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  updateProfile: async (profileData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await axios.put(
+        `${API_URL}/update-profile`,
+        profileData,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+      set({ user: response.data.user, isLoading: false });
+      toast.success("Profile updated successfully!");
+      return response.data;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      set({
+        error: error.response?.data?.message || "Error updating profile",
+        isLoading: false,
+      });
+      toast.error("Error updating profile");
+      throw error;
+    }
+  },
+
   verifyEmail: async (code) => {
     set({ isLoading: true, error: null });
     try {
@@ -119,6 +141,7 @@ export const useAuthStore = create((set) => ({
       throw error;
     }
   },
+
   checkAuth: async () => {
     set({ isCheckingAuth: true, error: null });
     try {
@@ -132,6 +155,7 @@ export const useAuthStore = create((set) => ({
       set({ error: null, isCheckingAuth: false, isAuthenticated: false });
     }
   },
+
   forgotPassword: async (email) => {
     set({ isLoading: true, error: null });
     try {
@@ -148,6 +172,7 @@ export const useAuthStore = create((set) => ({
       throw error;
     }
   },
+
   resetPassword: async (token, password) => {
     set({ isLoading: true, error: null });
     try {
@@ -163,6 +188,7 @@ export const useAuthStore = create((set) => ({
       throw error;
     }
   },
+
   help: async (email, helptitle, helpdescription, additional, location) => {
     set({ isLoading: true, error: null });
     try {

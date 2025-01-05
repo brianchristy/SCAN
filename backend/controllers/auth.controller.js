@@ -142,6 +142,50 @@ export const logout = async (req, res) => {
   res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
+export const updateProfile = async (req, res) => {
+  const { name, contactno, skills, location } = req.body;
+
+  try {
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Update fields
+    if (name) user.name = name;
+    if (contactno) user.contactno = contactno;
+
+    if (user.category === "Volunteer") {
+      if (skills) user.skills = skills;
+      if (location) user.location = location;
+    }
+
+    // Save user
+    await user.save();
+
+    // Send full user details including isVerified
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        name: user.name,
+        contactno: user.contactno,
+        skills: user.skills || [],
+        location: user.location || null,
+        isVerified: user.isVerified, // Ensure isVerified is included
+      },
+    });
+  } catch (error) {
+    console.error("Error in updateProfile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {

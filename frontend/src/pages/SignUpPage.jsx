@@ -70,7 +70,7 @@ const SignUpPage = () => {
         }}
       >
         <div className="text-xl font-bold">
-          <Link to="/">SCAN</Link>
+          <Link to="/">SNRCV</Link>
         </div>
         <nav>
           <ul className="flex space-x-8">

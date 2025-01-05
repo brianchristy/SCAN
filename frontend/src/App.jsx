@@ -13,6 +13,10 @@ import { useAuthStore } from "./store/authStore";
 import { useEffect } from "react";
 import VolunteerPage from "./pages/VolunteerPage";
 import CitizenPage from "./pages/CitizenPage";
+import CitizenHome from "./pages/CitizenHome";
+import VolunteerHome from "./pages/VolunteerHome";
+import CitizenProfile from "./pages/CitizenProfile";
+import VolunteerProfile from "./pages/VolunteerProfile";
 
 // protect routes that require authentication
 const ProtectedRoute = ({ children }) => {
@@ -33,17 +37,19 @@ const RedirectAuthenticatedUser = ({ children }) => {
   const { isAuthenticated, user } = useAuthStore();
 
   if (isAuthenticated && user.isVerified && user.category == "Volunteer") {
-    return <Navigate to="/volunteers" replace />;
+    return <Navigate to="/volunteer-home" replace />;
   }
   if (isAuthenticated && user.isVerified && user.category == "Senior Citizen") {
-    return <Navigate to="/citizens" replace />;
+    return <Navigate to="/citizen-home" replace />;
   }
-
+  if (isAuthenticated && user.isVerified && !user.category) {
+    return <Navigate to="/" replace />;
+  }
   return children;
 };
 
 function App() {
-  const { isCheckingAuth, checkAuth } = useAuthStore();
+  const { isCheckingAuth, checkAuth, isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -55,6 +61,20 @@ function App() {
     <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              user.category === "Volunteer" ? (
+                <Navigate to="/volunteer-home" replace />
+              ) : (
+                <Navigate to="/citizen-home" replace />
+              )
+            ) : (
+              <HomePage />
+            )
+          }
+        />
         <Route
           path="/citizens"
           element={
@@ -71,6 +91,39 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/citizen-home"
+          element={
+            <ProtectedRoute>
+              <CitizenHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/volunteer-home"
+          element={
+            <ProtectedRoute>
+              <VolunteerHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/citizen-profile"
+          element={
+            <ProtectedRoute>
+              <CitizenProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/volunteer-profile"
+          element={
+            <ProtectedRoute>
+              <VolunteerProfile />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/signup"
           element={

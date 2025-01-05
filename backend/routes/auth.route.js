@@ -3,6 +3,7 @@ import {
   login,
   logout,
   signup,
+  updateProfile,
   verifyEmail,
   forgotPassword,
   resetPassword,
@@ -29,6 +30,9 @@ router.post("/volunteers", verifyToken, vhelp); // accepts a specific help reque
 router.post("/signup", signup);
 router.post("/login", login);
 router.post("/logout", logout);
+
+// Profile update route
+router.put("/update-profile", verifyToken, updateProfile);
 
 // Citizen help request route
 router.post("/citizens", help);
