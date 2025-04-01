@@ -1,4 +1,4 @@
-# **Volunteer Assistance Network**
+# **Senior Citizen Assistance Network**
 
 ## **Overview**
 The Volunteer Assistance Network is a platform designed to connect senior citizens and caregivers with volunteers willing to offer assistance in various areas, such as companionship, housekeeping, gardening, and more. The goal is to create a supportive community that enhances the quality of life for all its members.
@@ -116,8 +116,7 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 
 ## **License**
 
-This project is licensed under the **MIT License**.  
-See the `LICENSE` file for more details.
+This project is licensed under the MIT License. See the [LICENSE](https://choosealicense.com/licenses/mit/) file for details.
 
 ---
 
