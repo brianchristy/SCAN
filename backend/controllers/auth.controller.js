@@ -1,5 +1,6 @@
 import bcryptjs from "bcryptjs";
 import crypto from "crypto";
+import mongoose from "mongoose";
 
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 import {
@@ -275,25 +276,25 @@ export const checkAuth = async (req, res) => {
 
 
 export const help = async (req, res) => {
-  const { email, helptitle, helpdescription, additional, location } = req.body;
+  const { email, helptitle, helpdescription, additional, location, action } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+        .json({ success: false, message: "User not found" });
     }
 
-    if (user.helpstatus) {
-      // Requesting help, set help details
+    if (action === 'request') {
+      // Requesting help
       user.helptitle = helptitle;
       user.helpdescription = helpdescription;
       user.additional = additional;
       user.location = location;
       user.helpstatus = false; // Set as active request
       user.volunteerDetails = { isAccepted: false }; // Reset volunteer details
-    } else {
-      // Cancel the help request
+    } else if (action === 'cancel') {
+      // Canceling help request
       user.helptitle = null;
       user.helpdescription = null;
       user.additional = null;
@@ -301,13 +302,21 @@ export const help = async (req, res) => {
       user.helpstatus = true;
       user.volunteerDetails = {}; // Clear volunteer details
     }
+
     await user.save();
+
+    // Return the updated user data
+    const userData = {
+      ...user._doc,
+      password: undefined,
+      verificationToken: undefined,
+      verificationTokenExpiresAt: undefined
+    };
 
     res.status(200).json({
       success: true,
-      message: "Help request updated",
-      helpstatus: user.helpstatus,
-      volunteerDetails: user.volunteerDetails
+      message: action === 'request' ? "Help request submitted" : "Help request cancelled",
+      user: userData
     });
   } catch (error) {
     console.log("Error in help request:", error);
@@ -317,17 +326,47 @@ export const help = async (req, res) => {
 
 export const getProducts = async (req, res) => {
   try {
-    const products = await User.find({ category: "Senior Citizen" });
-    res.status(200).json({ success: true, data: products });
+    const userId = req.userId;
+
+    // Query 1: Get all unaccepted help requests
+    const availableRequestsQuery = { 
+      category: "Citizen",
+      helptitle: { $exists: true, $ne: "" },
+      $or: [
+        { 'volunteerDetails': { $exists: false } },
+        { 'volunteerDetails': null },
+        { 'volunteerDetails.isAccepted': { $ne: true } }
+      ]
+    };
+
+    // Query 2: Get the specific request accepted by the current volunteer
+    const myAcceptedRequestQuery = {
+      'volunteerDetails.volunteerId': new mongoose.Types.ObjectId(userId),
+      'volunteerDetails.isAccepted': true
+    };
+
+    const availableRequests = await User.find(availableRequestsQuery)
+      .select('-password -verificationToken -verificationTokenExpiresAt');
+    
+    const myAcceptedRequest = await User.find(myAcceptedRequestQuery)
+      .select('-password -verificationToken -verificationTokenExpiresAt');
+
+    // Combine the results
+    const allProducts = [...availableRequests, ...myAcceptedRequest];
+    
+    res.status(200).json({ success: true, data: allProducts });
   } catch (error) {
-    console.log("error in fetching products:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error in fetching products:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error fetching help requests"
+    });
   }
 };
 
 
 export const vhelp = async (req, res) => {
-  const { email, volunteerName, volunteerContact } = req.body;
+  const { email, volunteerName, volunteerContact, volunteerId } = req.body;
 
   try {
     // Find the senior citizen by email
@@ -338,7 +377,7 @@ export const vhelp = async (req, res) => {
     }
 
     // Check if the request is already accepted by a volunteer
-    if (seniorCitizen.volunteerDetails.isAccepted) {
+    if (seniorCitizen.volunteerDetails?.isAccepted) {
       return res.status(400).json({ success: false, message: "Help request already accepted" });
     }
 
@@ -346,15 +385,28 @@ export const vhelp = async (req, res) => {
     seniorCitizen.volunteerDetails = {
       name: volunteerName,
       contactno: volunteerContact,
-      isAccepted: true
+      volunteerId: volunteerId,
+      isAccepted: true,
+      acceptedAt: new Date()
     };
     seniorCitizen.helpstatus = false; // Mark request as resolved
 
     await seniorCitizen.save();
 
+    // Find the volunteer and update their assigned request
+    if (volunteerId) {
+      const volunteer = await User.findById(volunteerId);
+      if (volunteer) {
+        volunteer.assignedRequest = seniorCitizen._id;
+        await volunteer.save();
+      }
+    }
+
+    // Return the updated senior citizen data
     res.status(200).json({
       success: true,
       message: "Help request accepted",
+      seniorCitizen: seniorCitizen
     });
   } catch (error) {
     console.log("Error in vhelp ", error);
@@ -381,6 +433,7 @@ export const markHelpCompleted = async (req, res) => {
     user.additional = null;
     user.location = null;
     user.helpstatus = true;
+    user.volunteerDetails = {}; // Clear volunteer details
     await user.save();
 
     res.status(200).json({
@@ -390,5 +443,17 @@ export const markHelpCompleted = async (req, res) => {
   } catch (error) {
     console.log("Error in marking help as completed:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 };

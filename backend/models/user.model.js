@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -63,7 +62,8 @@ const userSchema = new mongoose.Schema(
     volunteerDetails: {
       name: { type: String, default: null },
       contactno: { type: String, default: null },
-      isAccepted: { type: Boolean, default: false } 
+      isAccepted: { type: Boolean, default: false },
+      volunteerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
     },
     resetPasswordToken: String,
     resetPasswordExpiresAt: Date,

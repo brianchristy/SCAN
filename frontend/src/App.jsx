@@ -7,6 +7,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import LoadingSpinner from "./components/LoadingSpinner";
+import NotFoundPage from "./pages/NotFoundPage";
 
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./store/authStore";
@@ -17,32 +18,23 @@ import CitizenHome from "./pages/CitizenHome";
 import VolunteerHome from "./pages/VolunteerHome";
 import CitizenProfile from "./pages/CitizenProfile";
 import VolunteerProfile from "./pages/VolunteerProfile";
-
-// protect routes that require authentication
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, user } = useAuthStore();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (!user.isVerified) {
-    return <Navigate to="/verify-email" replace />;
-  }
-  return children;
-};
+import { CitizenRoute, VolunteerRoute, RoleProtectedRoute } from "./components/RoleProtectedRoute";
 
 // redirect authenticated users to the home page
 const RedirectAuthenticatedUser = ({ children }) => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isCheckingAuth } = useAuthStore();
 
-  if (isAuthenticated && user.isVerified && user.category == "Volunteer") {
-    return <Navigate to="/volunteer-home" replace />;
+  // If we're still checking auth, show loading
+  if (isCheckingAuth) {
+    return <LoadingSpinner />;
   }
-  if (isAuthenticated && user.isVerified && user.category == "Senior Citizen") {
-    return <Navigate to="/citizen-home" replace />;
-  }
-  if (isAuthenticated && user.isVerified && !user.category) {
+
+  if (isAuthenticated && user?.isVerified) {
+    if (user.category === "Volunteer") {
+      return <Navigate to="/volunteer-home" replace />;
+    } else if (user.category === "Senior Citizen") {
+      return <Navigate to="/citizen-home" replace />;
+    }
     return <Navigate to="/" replace />;
   }
   return children;
@@ -53,16 +45,14 @@ function App() {
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
-
-  if (isCheckingAuth) return <LoadingSpinner />;
+    // eslint-disable-next-line
+  }, []);
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-white">
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route
-          path="/"
+        <Route 
+          path="/" 
           element={
             isAuthenticated ? (
               user.category === "Volunteer" ? (
@@ -73,54 +63,57 @@ function App() {
             ) : (
               <HomePage />
             )
-          }
+          } 
         />
+        {/* Citizen Routes */}
         <Route
           path="/citizens"
           element={
-            <ProtectedRoute>
+            <CitizenRoute>
               <CitizenPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/volunteers"
-          element={
-            <ProtectedRoute>
-              <VolunteerPage />
-            </ProtectedRoute>
+            </CitizenRoute>
           }
         />
         <Route
           path="/citizen-home"
           element={
-            <ProtectedRoute>
+            <CitizenRoute>
               <CitizenHome />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/volunteer-home"
-          element={
-            <ProtectedRoute>
-              <VolunteerHome />
-            </ProtectedRoute>
+            </CitizenRoute>
           }
         />
         <Route
           path="/citizen-profile"
           element={
-            <ProtectedRoute>
+            <CitizenRoute>
               <CitizenProfile />
-            </ProtectedRoute>
+            </CitizenRoute>
+          }
+        />
+        
+        {/* Volunteer Routes */}
+        <Route
+          path="/volunteers"
+          element={
+            <VolunteerRoute>
+              <VolunteerPage />
+            </VolunteerRoute>
+          }
+        />
+        <Route
+          path="/volunteer-home"
+          element={
+            <VolunteerRoute>
+              <VolunteerHome />
+            </VolunteerRoute>
           }
         />
         <Route
           path="/volunteer-profile"
           element={
-            <ProtectedRoute>
+            <VolunteerRoute>
               <VolunteerProfile />
-            </ProtectedRoute>
+            </VolunteerRoute>
           }
         />
 
@@ -159,7 +152,7 @@ function App() {
           }
         />
         {/* catch all routes */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Toaster />
     </div>

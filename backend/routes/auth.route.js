@@ -12,6 +12,7 @@ import {
   getProducts,
   vhelp,
   markHelpCompleted,
+  getMe,
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
@@ -42,5 +43,7 @@ router.post("/mark-help-completed", markHelpCompleted);
 router.post("/verify-email", verifyEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
+
+router.get('/me', verifyToken, getMe);
 
 export default router;

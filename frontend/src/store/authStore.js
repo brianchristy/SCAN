@@ -9,13 +9,41 @@ const API_URL =
 
 axios.defaults.withCredentials = true;
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   user: null,
   isAuthenticated: false,
   error: null,
   isLoading: false,
-  isCheckingAuth: true,
+  isCheckingAuth: false,
   message: null,
+  
+  // Helper to normalize role names for comparison
+  normalizeRole: (role) => {
+    if (!role) return '';
+    return role.toLowerCase().replace(/\s+/g, '');
+  },
+  
+  // Check if current user has a specific role
+  hasRole: (role) => {
+    const { user, normalizeRole } = get();
+    if (!user || !user.category) return false;
+    return normalizeRole(user.category) === normalizeRole(role);
+  },
+  
+  // Check if current user is a volunteer
+  isVolunteer: () => {
+    const { user, normalizeRole } = get();
+    if (!user || !user.category) return false;
+    return normalizeRole(user.category) === 'volunteer';
+  },
+  
+  // Check if current user is a citizen (handles both 'Citizen' and 'Senior Citizen')
+  isCitizen: () => {
+    const { user, normalizeRole } = get();
+    if (!user || !user.category) return false;
+    const role = normalizeRole(user.category);
+    return role === 'citizen' || role === 'seniorcitizen';
+  },
 
   signup: async (
     email,
@@ -92,12 +120,42 @@ export const useAuthStore = create((set) => ({
         error: null,
         isLoading: false,
       });
+      return { success: true };
     } catch (error) {
+      let errorMessage = 'An error occurred during login';
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        if (error.response.status === 401) {
+          if (error.response.data.message === 'Email not verified') {
+            errorMessage = 'Please verify your email before logging in';
+          } else if (error.response.data.message === 'Invalid credentials') {
+            // Check if it's an email or password issue
+            // We'll need to check the specific error message from the server
+            if (error.response.data.error?.includes('email')) {
+              errorMessage = 'Incorrect email address';
+            } else {
+              errorMessage = 'Incorrect password';
+            }
+          } else if (error.response.data.message === 'User not found') {
+            errorMessage = 'No account found with this email';
+          }
+        } else if (error.response.status === 404) {
+          errorMessage = 'No account found with this email';
+        } else if (error.response.status === 400) {
+          errorMessage = 'Invalid email or password';
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage = 'No response from server. Please check your connection.';
+      }
+      
       set({
-        error: error.response?.data?.message || "Error logging in",
+        error: errorMessage,
         isLoading: false,
       });
-      throw error;
+      throw new Error(errorMessage);
     }
   },
 
@@ -110,7 +168,6 @@ export const useAuthStore = create((set) => ({
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       set({ user: response.data.user, isLoading: false });
-      toast.success("Profile updated successfully!");
       return response.data;
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -143,16 +200,25 @@ export const useAuthStore = create((set) => ({
   },
 
   checkAuth: async () => {
-    set({ isCheckingAuth: true, error: null });
+    set({ isCheckingAuth: true, isAuthenticated: false });
     try {
-      const response = await axios.get(`${API_URL}/check-auth`);
+      const response = await axios.get(`${API_URL}/me`);
       set({
         user: response.data.user,
         isAuthenticated: true,
         isCheckingAuth: false,
+        error: null,
       });
+      return response.data.user;
     } catch (error) {
-      set({ error: null, isCheckingAuth: false, isAuthenticated: false });
+      console.error('Auth check failed:', error);
+      set({
+        isAuthenticated: false,
+        user: null,
+        isCheckingAuth: false,
+        error: error.response?.data?.message || 'Authentication check failed',
+      });
+      return null;
     }
   },
 
@@ -189,7 +255,7 @@ export const useAuthStore = create((set) => ({
     }
   },
 
-  help: async (email, helptitle, helpdescription, additional, location) => {
+  help: async (email, helptitle, helpdescription, additional, location, action = 'request') => {
     set({ isLoading: true, error: null });
     try {
       const response = await axios.post(`${API_URL}/citizens`, {
@@ -198,14 +264,17 @@ export const useAuthStore = create((set) => ({
         helpdescription,
         additional,
         location,
+        action
       });
       set({
         message: response.data.message,
+        user: response.data.user, // Update the user in the store
         isLoading: false,
       });
+      return response.data; // Return the full response
     } catch (error) {
       set({
-        error: error.response.data.message || "Error in help",
+        error: error.response?.data?.message || "Error in help",
         isLoading: false,
       });
       throw error;
@@ -214,38 +283,61 @@ export const useAuthStore = create((set) => ({
 
   fetchProducts: async () => {
     try {
+      console.log('Making request to:', `${API_URL}/volunteers`);
       const response = await axios.get(`${API_URL}/volunteers`);
+      console.log('API Response:', response);
+      
       if (response.data.success) {
-        set({ products: response.data.data }); // Set products to the response data
+        console.log('Setting products:', response.data.data);
+        set({ products: response.data.data });
+        return response.data.data; // Return the data for use in components
       } else {
-        console.error("Fetch Products Error:", response.data.message);
+        const errorMsg = response.data.message || 'Unknown error fetching products';
+        console.error("Fetch Products Error:", errorMsg);
+        set({ error: errorMsg });
+        return [];
       }
     } catch (error) {
-      console.error("Error fetching products:", error);
-      set({
-        error: error.response?.data?.message || "Error fetching products",
-      });
+      const errorMsg = error.response?.data?.message || "Error fetching products";
+      console.error("Error in fetchProducts:", errorMsg, error);
+      set({ error: errorMsg });
+      return [];
     }
   },
 
-  vhelp: async ({ email, volunteerName, volunteerContact }) => {
+  vhelp: async (email, request) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.post(`${API_URL}/volunteers`, {
-        email,
-        volunteerName,
-        volunteerContact,
-      });
-      set({
-        message: response.data.message,
-        isLoading: false,
-      });
+      const state = useAuthStore.getState();
+      const response = await axios.post(
+        `${API_URL}/volunteers`,
+        {
+          email,
+          volunteerName: state.user?.name,
+          volunteerContact: state.user?.contactno,
+          volunteerId: state.user?._id,
+        },
+        { withCredentials: true }
+      );
+      
+      // Update the local state with the updated request
+      if (response.data.seniorCitizen) {
+        set((state) => ({
+          products: state.products.map((p) =>
+            p._id === response.data.seniorCitizen._id 
+              ? response.data.seniorCitizen 
+              : p
+          ),
+        }));
+        return response.data.seniorCitizen;
+      }
+      
+      return response.data;
     } catch (error) {
-      set({
-        error: error.response.data.message || "Error in help",
-        isLoading: false,
-      });
+      set({ error: error.response?.data?.message || 'Failed to accept help request' });
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
 
@@ -253,10 +345,8 @@ export const useAuthStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await axios.post(`${API_URL}/mark-help-completed`, { email });
-      set({
-        message: response.data.message,
-        isLoading: false,
-      });
+      set({ isLoading: false });
+      return response.data;
     } catch (error) {
       set({
         error: error.response?.data?.message || "Error marking help as completed",

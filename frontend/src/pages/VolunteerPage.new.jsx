@@ -28,7 +28,6 @@ import {
   Info,
   ArrowLeft
 } from 'lucide-react';
-import seniorBackground from '../assets/seniordashboard.jpeg';
 
 // Animation variants
 const containerVariants = {
@@ -97,23 +96,13 @@ const VolunteerPage = () => {
           (req) => req && req.helptitle && req.helpdescription
         );
         
-        console.log("Products from backend:", validProducts);
-        console.log("Current volunteer ID:", user?._id);
-
         // Check for any previously accepted request associated with this volunteer
         const alreadyAccepted = validProducts.find(
           (req) => 
             req.volunteerDetails && 
             req.volunteerDetails.isAccepted &&
-            String(req.volunteerDetails.volunteerId) === String(user?._id)
+            req.volunteerDetails.volunteerId === user?._id
         );
-
-        console.log("Found accepted request:", alreadyAccepted);
-
-        // Set location filter to volunteer's location if not already set
-        if (user?.location && !filterLocation) {
-          setFilterLocation(user.location);
-        }
 
         if (alreadyAccepted) {
           setAcceptedRequest(alreadyAccepted);
@@ -334,56 +323,56 @@ const VolunteerPage = () => {
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h3 className="text-xl font-semibold text-white">Available Requests</h3>
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
-              <input
-                type="text"
-                placeholder="Search requests..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white/20 border-2 border-indigo-500/40 rounded-xl text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
-              />
-            </div>
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-300" />
+            <input
+              type="text"
+              placeholder="Search requests..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-2">Location</label>
+            <label className="block text-sm font-medium text-indigo-100 mb-2">Location</label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-300" />
               <select
                 value={filterLocation}
                 onChange={(e) => setFilterLocation(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 bg-white/20 border-2 border-indigo-500/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none transition-all shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
               >
-                <option value="" className="bg-gray-800 text-white">All Locations</option>
+                <option value="">All Locations</option>
                 {locations.map((loc) => (
-                  <option key={loc} value={loc} className="bg-gray-800 text-white">
+                  <option key={loc} value={loc}>
                     {loc}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-300 pointer-events-none" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white mb-2">Help Type</label>
+            <label className="block text-sm font-medium text-indigo-100 mb-2">Help Type</label>
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-300" />
               <select
                 value={filterHelpType}
                 onChange={(e) => setFilterHelpType(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 bg-white/20 border-2 border-indigo-500/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none transition-all shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
               >
-                <option value="" className="bg-gray-800 text-white">All Types</option>
+                <option value="">All Types</option>
                 {helpCategories.map((category) => (
-                  <option key={category.id} value={category.label} className="bg-gray-800 text-white">
+                  <option key={category.id} value={category.label}>
                     {category.icon} {category.label}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-300 pointer-events-none" />
             </div>
           </div>
 
@@ -394,7 +383,7 @@ const VolunteerPage = () => {
                 setFilterHelpType('');
                 setSearchQuery('');
               }}
-              className="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2 border border-indigo-500/50"
+              className="w-full px-4 py-2.5 bg-indigo-600/50 hover:bg-indigo-700/50 text-white font-medium rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/10 flex items-center justify-center gap-2"
             >
               <XIcon className="h-4 w-4" />
               Clear Filters
@@ -482,20 +471,33 @@ const VolunteerPage = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-indigo-900 to-purple-900">
+      <style jsx global>{`
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        ::-webkit-scrollbar {
+          display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        * {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
+      
       {/* Background with overlay */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: `url(${seniorBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-slate-900/90 to-purple-900/80 backdrop-blur-sm" />
+      <div className="fixed inset-0 z-0">
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(67, 56, 202, 0.9) 0%, rgba(99, 102, 241, 0.8) 100%)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-slate-900/90 to-purple-900/80 backdrop-blur-sm" />
+        </div>
       </div>
-      {/* End background */}
 
       {/* Navbar */}
       <header className="w-full p-4 fixed top-0 left-0 z-50 bg-gradient-to-r from-indigo-900/70 to-purple-900/70 backdrop-blur-md border-b border-white/10">
@@ -623,7 +625,7 @@ const VolunteerPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-indigo-200 text-sm border-t border-white/10 bg-gradient-to-r from-indigo-900/60 to-purple-900/40 backdrop-blur-md z-20">
+      <footer className="py-6 text-center text-indigo-300/50 text-sm border-t border-white/5 bg-gradient-to-r from-indigo-900/30 to-purple-900/30">
         <div className="container mx-auto px-4">
           <p>© {new Date().getFullYear()} SCAN - Senior Citizen Assistance Network. All rights reserved.</p>
         </div>
