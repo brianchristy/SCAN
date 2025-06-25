@@ -1,109 +1,76 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuthStore } from "../store/authStore";
-import toast from "react-hot-toast";
+import bgImage from "../assets/signup-bg.jpg";
 
 const EmailVerificationPage = () => {
-  const [code, setCode] = useState(["", "", "", "", "", ""]);
-  const inputRefs = useRef([]);
+  const [status, setStatus] = useState("verifying"); // verifying, success, error
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const { error, isLoading, verifyEmail, checkAuth } = useAuthStore();
-
-  const handleChange = (index, value) => {
-    const newCode = [...code];
-
-    // Handle pasted content
-    if (value.length > 1) {
-      const pastedCode = value.slice(0, 6).split("");
-      for (let i = 0; i < 6; i++) {
-        newCode[i] = pastedCode[i] || "";
-      }
-      setCode(newCode);
-
-      // Focus on the last non-empty input or the first empty one
-      const lastFilledIndex = newCode.findLastIndex((digit) => digit !== "");
-      const focusIndex = lastFilledIndex < 5 ? lastFilledIndex + 1 : 5;
-      inputRefs.current[focusIndex].focus();
-    } else {
-      newCode[index] = value;
-      setCode(newCode);
-
-      // Move focus to the next input field if value is entered
-      if (value && index < 5) {
-        inputRefs.current[index + 1].focus();
-      }
-    }
-  };
-
-  const handleKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !code[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const verificationCode = code.join("");
-    try {
-      await verifyEmail(verificationCode);
-      await checkAuth();
-      navigate("/citizens");
-      toast.success("Email verified successfully");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // Auto submit when all fields are filled
   useEffect(() => {
-    if (code.every((digit) => digit !== "")) {
-      handleSubmit(new Event("submit"));
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    if (!token) {
+      setStatus("error");
+      setMessage("Invalid verification link.");
+      return;
     }
-  }, [code]);
+    // Auto-verify
+    fetch(`/api/auth/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setStatus("success");
+          setMessage(data.message || "Email verified successfully. You can now log in.");
+          setTimeout(() => navigate("/login"), 4000);
+        } else {
+          setStatus("error");
+          setMessage(data.message || "Verification failed.");
+        }
+      })
+      .catch(() => {
+        setStatus("error");
+        setMessage("Verification failed. Please try again later.");
+      });
+  }, [location.search, navigate]);
 
   return (
-    <div className="max-w-md w-full bg-blue-300 bg-opacity-50  rounded-2xl shadow-xl overflow-hidden">
+    <div
+      className="min-h-screen flex items-center justify-center bg-fixed bg-cover bg-center p-4 relative"
+      style={{
+        backgroundImage: `linear-gradient(rgba(30, 58, 138, 0.7), rgba(30, 58, 138, 0.7)), url(${bgImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className=" rounded-2xl shadow-2xl p-8 w-full max-w-md"
+        className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/10"
       >
-        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700 bg-clip-text">
-          Verify Your Email
+        <h2 className="text-3xl font-bold mb-6 text-center text-white drop-shadow-lg">
+          Email Verification
         </h2>
-        <p className="text-center text-black mb-6">
-          Enter the 6-digit code sent to your email address.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex justify-between">
-            {code.map((digit, index) => (
-              <input
-                key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
-                type="text"
-                maxLength="6"
-                value={digit}
-                onChange={(e) => handleChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-2xl font-bold bg-white text-black border-2  rounded-lg focus:border-blue-500 focus:outline-none"
-              />
-            ))}
-          </div>
-          {error && <p className="text-red-500 font-semibold mt-2">{error}</p>}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            type="submit"
-            disabled={isLoading || code.some((digit) => !digit)}
-            className="w-full py-3 px-4 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 "
+        {status === "verifying" && (
+          <p className="text-center text-indigo-100 mb-6">Verifying your email, please wait...</p>
+        )}
+        {status !== "verifying" && (
+          <p
+            className={`text-center mb-6 font-semibold ${
+              status === "success" ? "text-green-300" : "text-red-300"
+            }`}
           >
-            {isLoading ? "Verifying..." : "Verify Email"}
-          </motion.button>
-        </form>
+            {message}
+          </p>
+        )}
       </motion.div>
     </div>
   );

@@ -22,7 +22,6 @@ The Volunteer Assistance Network is a platform designed to connect senior citize
 - **Database:** MongoDB  
 - **State Management:** Zustand (authStore)  
 - **Authentication:** JWT (JSON Web Token)  
-- **Email Service:** Mailtrap  
 - **Environment:** Node.js, Postman (for API testing)  
 
 ---

@@ -8,6 +8,8 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import LoadingSpinner from "./components/LoadingSpinner";
 import NotFoundPage from "./pages/NotFoundPage";
+import SignupSuccessPage from "./pages/SignupSuccessPage";
+import EmailVerifiedSuccessPage from "./pages/EmailVerifiedSuccessPage";
 
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./store/authStore";
@@ -29,10 +31,10 @@ const RedirectAuthenticatedUser = ({ children }) => {
     return <LoadingSpinner />;
   }
 
-  if (isAuthenticated && user?.isVerified) {
+  if (isAuthenticated && user && user.isVerified && user.category) {
     if (user.category === "Volunteer") {
       return <Navigate to="/volunteer-home" replace />;
-    } else if (user.category === "Senior Citizen") {
+    } else if (user.category === "Citizen") {
       return <Navigate to="/citizen-home" replace />;
     }
     return <Navigate to="/" replace />;
@@ -54,7 +56,7 @@ function App() {
         <Route 
           path="/" 
           element={
-            isAuthenticated ? (
+            isAuthenticated && user && user.category ? (
               user.category === "Volunteer" ? (
                 <Navigate to="/volunteer-home" replace />
               ) : (
@@ -151,6 +153,8 @@ function App() {
             </RedirectAuthenticatedUser>
           }
         />
+        <Route path="/signup-success" element={<SignupSuccessPage />} />
+        <Route path="/email-verified-success" element={<EmailVerifiedSuccessPage />} />
         {/* catch all routes */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

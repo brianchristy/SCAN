@@ -3,13 +3,8 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
-import {
-  sendPasswordResetEmail,
-  sendResetSuccessEmail,
-  sendVerificationEmail,
-  sendWelcomeEmail,
-} from "../mailtrap/emails.js";
 import { User } from "../models/user.model.js";
+import { sendEmail } from '../utils/sendEmail.js';
 
 
 export const signup = async (req, res) => {
@@ -31,9 +26,10 @@ export const signup = async (req, res) => {
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
-    const verificationToken = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    // Generate a secure random token
+    const rawToken = crypto.randomBytes(16).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
     const user = new User({
       email,
@@ -43,24 +39,27 @@ export const signup = async (req, res) => {
       category,
       skills: category === "Volunteer" ? skills : [], // Save skills for Volunteer
       location: category === "Volunteer" ? location : null, // Save location for Volunteer
-      verificationToken,
-      verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      verificationToken: tokenHash,
+      verificationTokenExpiresAt,
+      isVerified: false,
     });
 
     await user.save();
 
-    // Generate JWT and set cookie
-    generateTokenAndSetCookie(res, user._id);
-
-    await sendVerificationEmail(user.email, verificationToken);
+    // Send verification email with the raw token
+    const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${rawToken}`;
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify your email for SCAN',
+      html: `<p>Hello ${user.name || ''},</p>
+        <p>Thank you for signing up for SCAN. Please verify your email by clicking the link below:</p>
+        <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+        <p>If you did not sign up, you can ignore this email.</p>`
+    });
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
-      user: {
-        ...user._doc,
-        password: undefined,
-      },
+      message: "User created successfully. Please check your email to verify your account.",
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -68,37 +67,25 @@ export const signup = async (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
-  const { code } = req.body;
+  const { token } = req.body;
   try {
+    if (!token) {
+      return res.status(400).json({ success: false, message: "Invalid or missing verification token." });
+    }
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
-      verificationToken: code,
+      verificationToken: tokenHash,
       verificationTokenExpiresAt: { $gt: Date.now() },
     });
-
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired verification code",
-      });
+      return res.status(400).json({ success: false, message: "Invalid or expired verification link." });
     }
-
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpiresAt = undefined;
     await user.save();
-
-    await sendWelcomeEmail(user.email, user.name);
-
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully",
-      user: {
-        ...user._doc,
-        password: undefined,
-      },
-    });
+    res.status(200).json({ success: true, message: "Email verified successfully. You can now log in." });
   } catch (error) {
-    console.log("error in verifyEmail ", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

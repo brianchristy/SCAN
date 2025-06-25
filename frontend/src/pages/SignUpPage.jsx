@@ -414,7 +414,7 @@ const SignUpPage = () => {
         skillsToSubmit,
         formData.location
       );
-      navigate("/verify-email");
+      navigate("/signup-success");
     } catch (error) {
       console.error("Signup error:", error);
     } finally {
