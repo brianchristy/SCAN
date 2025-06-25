@@ -35,7 +35,7 @@ const itemVariants = {
 
 const VolunteerProfile = () => {
   const navigate = useNavigate();
-  const { user, updateProfile, signout, isAuthenticated } = useAuthStore();
+  const { user, updateProfile, signout, isAuthenticated, checkAuth } = useAuthStore();
   const [name, setName] = useState(user?.name || '');
   const [contactNo, setContactNo] = useState(user?.contactno || '');
   const [skills, setSkills] = useState(user?.skills || []);
@@ -100,20 +100,25 @@ const VolunteerProfile = () => {
     );
   };
 
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/volunteer-home");
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background with overlay */}
-      <div 
+        <div 
         className="fixed inset-0 z-0"
-        style={{
+          style={{
           backgroundImage: `url(${seniorBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-slate-900/90 to-purple-900/80 backdrop-blur-sm" />
-      </div>
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-slate-900/90 to-purple-900/80 backdrop-blur-sm" />
+        </div>
       {/* End background */}
 
       {/* Navbar */}
@@ -129,13 +134,13 @@ const VolunteerProfile = () => {
             </span>
           </Link>
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/volunteer-home" 
+            <button
+              onClick={handleHomeClick}
               className="flex items-center gap-2 px-4 py-2 text-indigo-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Home size={20} />
               Home
-            </Link>
+            </button>
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/90 hover:bg-red-700 text-white font-medium transition-all hover:shadow-lg hover:shadow-red-500/20"

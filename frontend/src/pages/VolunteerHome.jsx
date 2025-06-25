@@ -26,7 +26,7 @@ const itemVariants = {
 
 const VolunteerHome = () => {
   const navigate = useNavigate();
-  const { user, signout, isAuthenticated } = useAuthStore();
+  const { user, signout, isAuthenticated, checkAuth } = useAuthStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -43,6 +43,21 @@ const VolunteerHome = () => {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
+  };
+
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/volunteer-home");
+  };
+
+  const handleProfileClick = async () => {
+    await checkAuth();
+    navigate("/volunteer-profile");
+  };
+
+  const handleVolunteersClick = async () => {
+    await checkAuth();
+    navigate("/volunteers");
   };
 
   return (
@@ -148,13 +163,13 @@ const VolunteerHome = () => {
             </span>
           </Link>
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/volunteer-home" 
+            <button
+              onClick={handleHomeClick}
               className="flex items-center gap-2 px-4 py-2 text-indigo-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Home size={20} />
               Home
-            </Link>
+            </button>
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/90 hover:bg-red-700 text-white font-medium transition-all hover:shadow-lg hover:shadow-red-500/20"
@@ -210,20 +225,20 @@ const VolunteerHome = () => {
               className="flex flex-wrap justify-center gap-6 mt-12"
               variants={itemVariants}
             >
-              <Link
-                to="/volunteer-profile"
+              <button
+                onClick={handleProfileClick}
                 className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-indigo-500/30 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <User size={20} className="flex-shrink-0" />
                 <span>View or Update Profile</span>
-              </Link>
-              <Link
-                to="/volunteers"
+              </button>
+              <button
+                onClick={handleVolunteersClick}
                 className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <HeartHandshake size={20} className="flex-shrink-0" />
                 <span>Help a Citizen</span>
-              </Link>
+              </button>
             </motion.div>
             
             <motion.div 

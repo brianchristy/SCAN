@@ -50,6 +50,7 @@ const helpCategories = [
   { id: 'Housekeeping', label: 'Housekeeping', icon: '🧹' },
   { id: 'Gardening', label: 'Gardening', icon: '🌱' },
   { id: 'Companionship', label: 'Companionship', icon: '👥' },
+  { id: 'Reading', label: 'Reading', icon: '📖' },
   { id: 'Shopping', label: 'Shopping', icon: '🛒' },
   { id: 'Medical', label: 'Medical', icon: '🏥' },
 ];
@@ -91,12 +92,12 @@ const CitizenPage = () => {
     }
   }, [hasActiveRequest, user]);
 
-  // Polling: refresh user/request status every 5 seconds if waiting for volunteer
+  // Polling: refresh user/request status every 30 seconds if waiting for volunteer
   useEffect(() => {
     if (hasActiveRequest && !user?.volunteerDetails?.name) {
       intervalRef.current = setInterval(async () => {
         await checkAuth();
-      }, 5000);
+      }, 10000);
     }
     return () => clearInterval(intervalRef.current);
   }, [hasActiveRequest, user?.volunteerDetails?.name, checkAuth]);
@@ -197,19 +198,29 @@ const CitizenPage = () => {
     }
   };
 
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/citizen-home");
+  };
+
+  const handleProfileClick = async () => {
+    await checkAuth();
+    navigate("/citizen-profile");
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Particle Background (optional, not present in CitizenPage) */}
       {/* Background with overlay */}
-      <div 
+    <div 
         className="fixed inset-0 z-0"
-        style={{
+      style={{
           backgroundImage: `url(${seniorBackground})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
-        }}
-      >
+      }}
+    >
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-slate-900/90 to-indigo-900/80 backdrop-blur-sm" />
       </div>
       {/* End background */}
@@ -223,24 +234,24 @@ const CitizenPage = () => {
           >
             <HeartPulse className="h-8 w-8 text-blue-300 group-hover:text-blue-200 transition-colors" />
             <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-300 to-blue-100 bg-clip-text text-transparent">
-              SCAN
-            </span>
-          </Link>
+                  SCAN
+                </span>
+              </Link>
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/citizen-home" 
+            <button
+              onClick={handleHomeClick}
               className="flex items-center gap-2 px-4 py-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Home size={20} />
               Home
-            </Link>
-            <Link 
-              to="/citizen-profile" 
+            </button>
+            <button 
+              onClick={handleProfileClick}
               className="flex items-center gap-2 px-4 py-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <User size={20} />
               Profile
-            </Link>
+            </button>
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/90 hover:bg-red-700 text-white font-medium transition-all hover:shadow-lg hover:shadow-red-500/20"
@@ -287,19 +298,33 @@ const CitizenPage = () => {
                 <div className="p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-blue-500/30 transition-colors">
                   <p className="text-xs font-medium text-blue-300 uppercase tracking-wider mb-2">Status</p>
                   <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                    hasActiveRequest 
+                    hasActiveRequest && user.volunteerDetails?.name
+                      ? 'bg-gradient-to-r from-orange-400/30 to-orange-500/30 text-orange-300 border border-orange-400/40'
+                      : hasActiveRequest
                       ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 border border-yellow-500/30' 
                       : 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/30'
                   }`}>
                     <span className="relative flex h-2 w-2 mr-2">
                       <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
-                        hasActiveRequest ? 'bg-yellow-400' : 'bg-green-400'
+                        hasActiveRequest && user.volunteerDetails?.name
+                          ? 'bg-orange-400'
+                          : hasActiveRequest
+                          ? 'bg-yellow-400'
+                          : 'bg-green-400'
                       } opacity-75`}></span>
                       <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                        hasActiveRequest ? 'bg-yellow-400' : 'bg-green-400'
+                        hasActiveRequest && user.volunteerDetails?.name
+                          ? 'bg-orange-400'
+                          : hasActiveRequest
+                          ? 'bg-yellow-400'
+                          : 'bg-green-400'
                       }`}></span>
                     </span>
-                    {hasActiveRequest ? 'Request Active' : 'Available for Help'}
+                    {hasActiveRequest && user.volunteerDetails?.name
+                      ? 'Volunteer Assigned'
+                      : hasActiveRequest
+                      ? 'Request Active'
+                      : 'Idle'}
                   </div>
                 </div>
                 

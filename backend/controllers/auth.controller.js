@@ -338,7 +338,7 @@ export const getProducts = async (req, res) => {
         { 'volunteerDetails.isAccepted': { $ne: true } }
       ]
     };
-
+    
     // Query 2: Get the specific request accepted by the current volunteer
     const myAcceptedRequestQuery = {
       'volunteerDetails.volunteerId': new mongoose.Types.ObjectId(userId),
@@ -374,6 +374,11 @@ export const vhelp = async (req, res) => {
 
     if (!seniorCitizen) {
       return res.status(404).json({ success: false, message: "Senior citizen not found" });
+    }
+
+    // Check if the help request is still available
+    if (!seniorCitizen.helptitle || seniorCitizen.helpstatus === true) {
+      return res.status(409).json({ success: false, message: "Help request is no longer available" });
     }
 
     // Check if the request is already accepted by a volunteer

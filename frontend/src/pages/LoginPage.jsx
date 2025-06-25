@@ -85,6 +85,7 @@ const Input = ({ icon: Icon, type = 'text', label, error, ...props }) => {
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { checkAuth, user } = useAuthStore();
   const [formData, setFormData] = useState(() => {
     const savedEmail = localStorage.getItem('savedEmail') || '';
     const savedPassword = localStorage.getItem('savedPassword') ? atob(localStorage.getItem('savedPassword')) : '';
@@ -122,10 +123,14 @@ const LoginPage = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    if (isAuthenticated && user) {
+      if (user.category === 'Volunteer') {
+        navigate('/volunteer-home');
+      } else if (user.category === 'Citizen' || user.category === 'Senior Citizen') {
+        navigate('/citizen-home');
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -193,6 +198,11 @@ const LoginPage = () => {
     }
   };
 
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-fixed bg-cover bg-center p-4 relative"
       style={{
@@ -211,8 +221,8 @@ const LoginPage = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <Link 
-          to="/" 
+        <button
+          onClick={handleHomeClick}
           className="flex items-center group"
         >
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 group-hover:border-blue-400/50 transition-colors duration-200">
@@ -221,7 +231,7 @@ const LoginPage = () => {
           <span className="ml-3 text-white font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             Back to Home
           </span>
-        </Link>
+        </button>
       </motion.div>
       
       {/* Main Container */}
@@ -265,7 +275,7 @@ const LoginPage = () => {
                   name="password"
                   type="password"
                   label="Password"
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
                   error={errors.password}

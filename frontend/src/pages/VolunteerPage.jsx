@@ -56,7 +56,8 @@ const VolunteerPage = () => {
     products, 
     signout, 
     markHelpCompleted,
-    isAuthenticated 
+    isAuthenticated,
+    checkAuth
   } = useAuthStore();
   
   const [acceptedRequest, setAcceptedRequest] = useState(null);
@@ -145,6 +146,14 @@ const VolunteerPage = () => {
     await refreshData();
   };
 
+  // Set default filterHelpType to 'Your Preference' if user has skills
+  useEffect(() => {
+    if (user?.skills && user.skills.length > 0 && filterHelpType === '') {
+      setFilterHelpType('__PREFERENCE__');
+    }
+    // eslint-disable-next-line
+  }, [user]);
+
   // Filter available requests based on selected filters
   const filteredRequests = (products || []).filter(request => {
     // Skip invalid or undefined requests
@@ -157,7 +166,12 @@ const VolunteerPage = () => {
     if (filterLocation && request.location !== filterLocation) return false;
     
     // Apply help type filter
-    if (filterHelpType && request.helptitle !== filterHelpType) return false;
+    if (filterHelpType === '__PREFERENCE__') {
+      // Only show requests matching any of the volunteer's skills
+      if (!user?.skills || !user.skills.includes(request.helptitle)) return false;
+    } else if (filterHelpType && request.helptitle !== filterHelpType) {
+      return false;
+    }
     
     // Apply search query
     if (searchQuery && !request.helptitle.toLowerCase().includes(searchQuery.toLowerCase()) && 
@@ -173,7 +187,7 @@ const VolunteerPage = () => {
     if (!window.confirm('Are you sure you want to accept this help request?')) {
       return;
     }
-    
+
     try {
       setIsLoading(true);
       const acceptedRequest = await vhelp(request.email, request);
@@ -184,7 +198,18 @@ const VolunteerPage = () => {
       }
     } catch (error) {
       console.error('Error accepting request:', error);
-      toast.error(error.message || 'Failed to accept request');
+      // Check for 409 or 400 error (help no longer available or already accepted)
+      const msg = error?.response?.data?.message?.toLowerCase() || '';
+      if (
+        error?.response?.status === 409 ||
+        (error?.response?.status === 400 && msg.includes('already accepted')) ||
+        msg.includes('no longer available')
+      ) {
+        toast.error('Help request is no longer available.');
+        await refreshData();
+      } else {
+        toast.error(error.message || 'Failed to accept request');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -227,6 +252,16 @@ const VolunteerPage = () => {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
+  };
+
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/volunteer-home");
+  };
+
+  const handleProfileClick = async () => {
+    await checkAuth();
+    navigate("/volunteer-profile");
   };
 
   const renderAcceptedRequest = () => (
@@ -376,6 +411,7 @@ const VolunteerPage = () => {
                 onChange={(e) => setFilterHelpType(e.target.value)}
                 className="w-full pl-10 pr-8 py-2.5 bg-white/20 border-2 border-indigo-500/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none transition-all shadow-sm"
               >
+                <option value="__PREFERENCE__" className="bg-gray-800 text-white">Your Preference</option>
                 <option value="" className="bg-gray-800 text-white">All Types</option>
                 {helpCategories.map((category) => (
                   <option key={category.id} value={category.label} className="bg-gray-800 text-white">
@@ -510,20 +546,20 @@ const VolunteerPage = () => {
             </span>
           </Link>
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/volunteer-home" 
+            <button
+              onClick={handleHomeClick}
               className="flex items-center gap-2 px-4 py-2 text-indigo-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Home size={20} />
               Home
-            </Link>
-            <Link 
-              to="/volunteer-profile" 
+            </button>
+            <button
+              onClick={handleProfileClick}
               className="flex items-center gap-2 px-4 py-2 text-indigo-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <User size={20} />
               Profile
-            </Link>
+            </button>
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/90 hover:bg-red-700 text-white font-medium transition-all hover:shadow-lg hover:shadow-red-500/20"
@@ -577,8 +613,11 @@ const VolunteerPage = () => {
           >
             <button
               onClick={() => setActiveTab('available')}
+              disabled={!!acceptedRequest}
               className={`px-6 py-2.5 font-medium rounded-lg transition-all flex items-center gap-2 ${
-                activeTab === 'available'
+                !!acceptedRequest
+                  ? 'text-indigo-400/50 cursor-not-allowed'
+                  : activeTab === 'available'
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
                   : 'text-indigo-200 hover:bg-white/5'
               }`}

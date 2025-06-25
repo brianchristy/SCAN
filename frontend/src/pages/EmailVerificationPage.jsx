@@ -9,7 +9,7 @@ const EmailVerificationPage = () => {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
 
-  const { error, isLoading, verifyEmail } = useAuthStore();
+  const { error, isLoading, verifyEmail, checkAuth } = useAuthStore();
 
   const handleChange = (index, value) => {
     const newCode = [...code];
@@ -48,6 +48,7 @@ const EmailVerificationPage = () => {
     const verificationCode = code.join("");
     try {
       await verifyEmail(verificationCode);
+      await checkAuth();
       navigate("/citizens");
       toast.success("Email verified successfully");
     } catch (error) {

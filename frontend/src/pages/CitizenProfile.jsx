@@ -86,20 +86,25 @@ const CitizenProfile = () => {
     }
   };
 
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/citizen-home");
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background with overlay */}
-      <div 
+        <div 
         className="fixed inset-0 z-0"
-        style={{
+          style={{
           backgroundImage: `url(${seniorBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-slate-900/90 to-indigo-900/80 backdrop-blur-sm" />
-      </div>
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-slate-900/90 to-indigo-900/80 backdrop-blur-sm" />
+        </div>
       {/* End background */}
       
       {/* Navbar */}
@@ -115,13 +120,13 @@ const CitizenProfile = () => {
             </span>
           </Link>
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/citizen-home" 
+            <button
+              onClick={handleHomeClick}
               className="flex items-center gap-2 px-4 py-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Home size={20} />
               Home
-            </Link>
+            </button>
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/90 hover:bg-red-700 text-white font-medium transition-all hover:shadow-lg hover:shadow-red-500/20"

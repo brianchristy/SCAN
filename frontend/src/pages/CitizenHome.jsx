@@ -90,7 +90,7 @@ const itemVariants = {
 
 const CitizenHome = () => {
   const navigate = useNavigate();
-  const { user, signout, isAuthenticated } = useAuthStore();
+  const { user, signout, isAuthenticated, checkAuth } = useAuthStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -107,6 +107,21 @@ const CitizenHome = () => {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
+  };
+
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/citizen-home");
+  };
+
+  const handleProfileClick = async () => {
+    await checkAuth();
+    navigate("/citizen-profile");
+  };
+
+  const handleCitizensClick = async () => {
+    await checkAuth();
+    navigate("/citizens");
   };
 
   return (
@@ -212,13 +227,13 @@ const CitizenHome = () => {
             </span>
           </Link>
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/citizen-home" 
+            <button
+              onClick={handleHomeClick}
               className="flex items-center gap-2 px-4 py-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Home size={20} />
               Home
-            </Link>
+            </button>
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600/90 hover:bg-red-700 text-white font-medium transition-all hover:shadow-lg hover:shadow-red-500/20"
@@ -274,20 +289,20 @@ const CitizenHome = () => {
               className="flex flex-wrap justify-center gap-6 mt-12"
               variants={itemVariants}
             >
-              <Link
-                to="/citizen-profile"
+              <button
+                onClick={handleProfileClick}
                 className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <User size={20} className="flex-shrink-0" />
                 <span>View or Update Profile</span>
-              </Link>
-              <Link
-                to="/citizens"
+              </button>
+              <button
+                onClick={handleCitizensClick}
                 className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:shadow-green-500/30 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <LifeBuoy size={20} className="flex-shrink-0" />
                 <span>Request Help</span>
-              </Link>
+              </button>
             </motion.div>
             
             <motion.div 

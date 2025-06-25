@@ -73,6 +73,8 @@ const Input = ({ icon: Icon, type = 'text', label, error, ...props }) => {
           }`}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          onCopy={type === 'password' && !showPassword ? (e) => e.preventDefault() : undefined}
+          onCut={type === 'password' && !showPassword ? (e) => e.preventDefault() : undefined}
           {...props}
         />
         {type === 'password' && (
@@ -266,7 +268,24 @@ const Checkbox = ({
   </div>
 );
 
-
+const ConfirmPasswordCheck = ({ password, confirmPassword }) => {
+  if (!confirmPassword) return null;
+  const isMatch = password === confirmPassword;
+  return (
+    <div className="mt-2 text-sm flex items-center">
+      <span className={`inline-flex items-center justify-center w-4 h-4 mr-2 rounded-full ${isMatch ? 'bg-green-500' : 'bg-red-500'}`}>
+        {isMatch ? (
+          <Check className="w-3 h-3 text-white" />
+        ) : (
+          <X className="w-3 h-3 text-white" />
+        )}
+      </span>
+      <span className={isMatch ? 'text-green-400' : 'text-red-400'}>
+        {isMatch ? 'Passwords match' : 'Passwords do not match'}
+      </span>
+    </div>
+  );
+};
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -274,6 +293,7 @@ const SignUpPage = () => {
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     contactno: '',
     category: '',
     skills: [],
@@ -281,14 +301,18 @@ const SignUpPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signup, error: authError, isLoading, isAuthenticated } = useAuthStore();
+  const { signup, error: authError, isLoading, isAuthenticated, checkAuth, user } = useAuthStore();
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    if (isAuthenticated && user) {
+      if (user.category === 'Volunteer') {
+        navigate('/volunteer-home');
+      } else if (user.category === 'Citizen' || user.category === 'Senior Citizen') {
+        navigate('/citizen-home');
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -346,6 +370,13 @@ const SignUpPage = () => {
       }
     }
     
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
     // Contact number validation
     if (!formData.contactno) {
       newErrors.contactno = 'Contact number is required';
@@ -391,6 +422,11 @@ const SignUpPage = () => {
     }
   };
 
+  const handleHomeClick = async () => {
+    await checkAuth();
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-fixed bg-cover bg-center p-4 relative"
       style={{
@@ -409,8 +445,8 @@ const SignUpPage = () => {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <Link 
-          to="/" 
+        <button
+          onClick={handleHomeClick}
           className="flex items-center group"
         >
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 group-hover:border-blue-400/50 transition-colors duration-200">
@@ -419,7 +455,7 @@ const SignUpPage = () => {
           <span className="ml-3 text-white font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             Back to Home
           </span>
-        </Link>
+        </button>
       </motion.div>
       
       {/* Main Container */}
@@ -480,7 +516,7 @@ const SignUpPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   label="Password"
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   error={errors.password}
                   required
                 />
@@ -488,6 +524,21 @@ const SignUpPage = () => {
                   password={formData.password} 
                   isVisible={formData.password.length > 0}
                 />
+              </motion.div>
+
+              <motion.div variants={itemVariants}>
+                <Input
+                  icon={Lock}
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  label="Confirm Password"
+                  placeholder="Re-enter your password"
+                  error={errors.confirmPassword}
+                  required
+                />
+                <ConfirmPasswordCheck password={formData.password} confirmPassword={formData.confirmPassword} />
               </motion.div>
 
               <motion.div variants={itemVariants}>
@@ -583,30 +634,43 @@ const SignUpPage = () => {
                       Location
                     </label>
                     <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <MapPin className="h-5 w-5 text-indigo-400" />
+                      </div>
                       <select
+                        id="location"
                         name="location"
                         value={formData.location}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200/20 bg-white/5 text-white focus:border-blue-400 focus:ring-0 focus:ring-blue-400/20 focus:ring-offset-0 transition-all duration-200 appearance-none"
+                        className="w-full pl-10 pr-10 py-3 rounded-xl border-2 border-gray-200/20 bg-white/5 text-white hover:bg-white/10 focus:bg-white/10 focus:border-blue-400 focus:ring-0 focus:ring-blue-400/20 focus:ring-offset-0 transition-all duration-200"
+                        style={{
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'none',
+                          appearance: 'none',
+                          backgroundImage: 'none',
+                          cursor: 'pointer',
+                          color: '#ffffff'
+                        }}
+                        required
                       >
-                        <option value="">Select your location</option>
-                        <option value="Thiruvananthapuram">Thiruvananthapuram</option>
-                        <option value="Kollam">Kollam</option>
-                        <option value="Pathanamthitta">Pathanamthitta</option>
-                        <option value="Alappuzha">Alappuzha</option>
-                        <option value="Kottayam">Kottayam</option>
-                        <option value="Idukki">Idukki</option>
-                        <option value="Ernakulam">Ernakulam</option>
-                        <option value="Thrissur">Thrissur</option>
-                        <option value="Palakkad">Palakkad</option>
-                        <option value="Malappuram">Malappuram</option>
-                        <option value="Kozhikode">Kozhikode</option>
-                        <option value="Wayanad">Wayanad</option>
-                        <option value="Kannur">Kannur</option>
-                        <option value="Kasaragod">Kasaragod</option>
+                        <option value="" className="bg-gray-800 text-white hover:bg-gray-700">Select your location</option>
+                        <option value="Thiruvananthapuram" className="bg-gray-800 text-white hover:bg-gray-700">Thiruvananthapuram</option>
+                        <option value="Kollam" className="bg-gray-800 text-white hover:bg-gray-700">Kollam</option>
+                        <option value="Alappuzha" className="bg-gray-800 text-white hover:bg-gray-700">Alappuzha</option>
+                        <option value="Pathanamthitta" className="bg-gray-800 text-white hover:bg-gray-700">Pathanamthitta</option>
+                        <option value="Kottayam" className="bg-gray-800 text-white hover:bg-gray-700">Kottayam</option>
+                        <option value="Idukki" className="bg-gray-800 text-white hover:bg-gray-700">Idukki</option>
+                        <option value="Ernakulam" className="bg-gray-800 text-white hover:bg-gray-700">Ernakulam</option>
+                        <option value="Thrissur" className="bg-gray-800 text-white hover:bg-gray-700">Thrissur</option>
+                        <option value="Palakkad" className="bg-gray-800 text-white hover:bg-gray-700">Palakkad</option>
+                        <option value="Malappuram" className="bg-gray-800 text-white hover:bg-gray-700">Malappuram</option>
+                        <option value="Kozhikode" className="bg-gray-800 text-white hover:bg-gray-700">Kozhikode</option>
+                        <option value="Wayanad" className="bg-gray-800 text-white hover:bg-gray-700">Wayanad</option>
+                        <option value="Kannur" className="bg-gray-800 text-white hover:bg-gray-700">Kannur</option>
+                        <option value="Kasaragod" className="bg-gray-800 text-white hover:bg-gray-700">Kasaragod</option>
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                        <ChevronDown className="h-5 w-5" />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <ChevronDown className="h-5 w-5 text-indigo-400" />
                       </div>
                     </div>
                     {errors.location && (
@@ -622,7 +686,7 @@ const SignUpPage = () => {
                 </>
               )}
 
-              {authError && (
+              {authError && authError !== 'No token provided' && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
