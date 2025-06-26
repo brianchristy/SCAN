@@ -100,7 +100,7 @@ const VolunteerPage = () => {
         
         console.log("Products from backend:", validProducts);
         console.log("Current volunteer ID:", user?._id);
-
+        
         // Check for any previously accepted request associated with this volunteer
         const alreadyAccepted = validProducts.find(
           (req) => 
@@ -187,7 +187,7 @@ const VolunteerPage = () => {
     if (!window.confirm('Are you sure you want to accept this help request?')) {
       return;
     }
-
+    
     try {
       setIsLoading(true);
       const acceptedRequest = await vhelp(request.email, request);
@@ -208,7 +208,7 @@ const VolunteerPage = () => {
         toast.error('Help request is no longer available.');
         await refreshData();
       } else {
-        toast.error(error.message || 'Failed to accept request');
+      toast.error(error.message || 'Failed to accept request');
       }
     } finally {
       setIsLoading(false);
@@ -520,17 +520,17 @@ const VolunteerPage = () => {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background with overlay */}
-      <div 
+        <div 
         className="fixed inset-0 z-0"
-        style={{
+          style={{
           backgroundImage: `url(${seniorBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-slate-900/90 to-purple-900/80 backdrop-blur-sm" />
-      </div>
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-slate-900/90 to-purple-900/80 backdrop-blur-sm" />
+        </div>
       {/* End background */}
 
       {/* Navbar */}

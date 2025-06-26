@@ -63,3 +63,9 @@ export const VolunteerRoute = ({ children }) => (
     {children}
   </RoleProtectedRoute>
 );
+
+export const AdminRoute = ({ children }) => (
+  <RoleProtectedRoute allowedRoles={['Admin']}>
+    {children}
+  </RoleProtectedRoute>
+);

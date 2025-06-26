@@ -10,6 +10,7 @@ import LoadingSpinner from "./components/LoadingSpinner";
 import NotFoundPage from "./pages/NotFoundPage";
 import SignupSuccessPage from "./pages/SignupSuccessPage";
 import EmailVerifiedSuccessPage from "./pages/EmailVerifiedSuccessPage";
+import VolunteerPendingApprovalPage from "./pages/VolunteerPendingApprovalPage";
 
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./store/authStore";
@@ -20,7 +21,8 @@ import CitizenHome from "./pages/CitizenHome";
 import VolunteerHome from "./pages/VolunteerHome";
 import CitizenProfile from "./pages/CitizenProfile";
 import VolunteerProfile from "./pages/VolunteerProfile";
-import { CitizenRoute, VolunteerRoute, RoleProtectedRoute } from "./components/RoleProtectedRoute";
+import AdminPanel from "./pages/AdminPanel";
+import { CitizenRoute, VolunteerRoute, RoleProtectedRoute, AdminRoute } from "./components/RoleProtectedRoute";
 
 // redirect authenticated users to the home page
 const RedirectAuthenticatedUser = ({ children }) => {
@@ -32,7 +34,9 @@ const RedirectAuthenticatedUser = ({ children }) => {
   }
 
   if (isAuthenticated && user && user.isVerified && user.category) {
-    if (user.category === "Volunteer") {
+    if (user.category === "Admin") {
+      return <Navigate to="/admin" replace />;
+    } else if (user.category === "Volunteer") {
       return <Navigate to="/volunteer-home" replace />;
     } else if (user.category === "Citizen") {
       return <Navigate to="/citizen-home" replace />;
@@ -65,6 +69,14 @@ function App() {
             ) : (
               <HomePage />
             )
+          } 
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPanel />
+            </AdminRoute>
           } 
         />
         {/* Citizen Routes */}
@@ -154,6 +166,7 @@ function App() {
           }
         />
         <Route path="/signup-success" element={<SignupSuccessPage />} />
+        <Route path="/volunteer-pending-approval" element={<VolunteerPendingApprovalPage />} />
         <Route path="/email-verified-success" element={<EmailVerifiedSuccessPage />} />
         {/* catch all routes */}
         <Route path="*" element={<NotFoundPage />} />

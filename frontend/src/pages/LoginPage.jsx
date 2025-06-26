@@ -86,16 +86,10 @@ const Input = ({ icon: Icon, type = 'text', label, error, ...props }) => {
 const LoginPage = () => {
   const navigate = useNavigate();
   const { checkAuth, user } = useAuthStore();
-  const [formData, setFormData] = useState(() => {
-    const savedEmail = localStorage.getItem('savedEmail') || '';
-    const savedPassword = localStorage.getItem('savedPassword') ? atob(localStorage.getItem('savedPassword')) : '';
-    const rememberMe = !!savedEmail;
-    
-    return {
-      email: savedEmail,
-      password: savedPassword,
-      rememberMe,
-    };
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    rememberMe: false,
   });
   const [errors, setErrors] = useState({});
   const { login, isLoading, error, isAuthenticated } = useAuthStore();
@@ -156,44 +150,16 @@ const LoginPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle remember me change
-  const handleRememberMeChange = (e) => {
-    const { checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      rememberMe: checked
-    }));
-    
-    if (!checked) {
-      // Clear saved credentials if unchecking remember me
-      localStorage.removeItem('savedEmail');
-      localStorage.removeItem('savedPassword');
-    }
-  };
-
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
     try {
-      // Handle remember me
-      if (formData.rememberMe) {
-        // Store email and password (encoded) in localStorage
-        localStorage.setItem('savedEmail', formData.email);
-        localStorage.setItem('savedPassword', btoa(formData.password));
-      } else {
-        // Clear saved credentials if remember me is not checked
-        localStorage.removeItem('savedEmail');
-        localStorage.removeItem('savedPassword');
-      }
-      
       const result = await login(formData.email, formData.password);
       if (result?.success) {
         toast.success('Login successful!');
       }
     } catch (error) {
-      // Error is already handled in the auth store, just show the toast
       toast.error(error.message);
     }
   };
@@ -255,7 +221,7 @@ const LoginPage = () => {
 
           {/* Form */}
           <div className="px-8 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
               <motion.div variants={itemVariants}>
                 <Input
                   icon={Mail}
@@ -266,6 +232,7 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   error={errors.email}
+                  autoComplete="username"
                 />
               </motion.div>
 
@@ -279,6 +246,7 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   error={errors.password}
+                  autoComplete="current-password"
                 />
               </motion.div>
 
@@ -288,42 +256,15 @@ const LoginPage = () => {
               >
                 <div className="flex items-center space-x-2">
                   <label className="flex items-center cursor-pointer">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        name="rememberMe"
-                        checked={formData.rememberMe}
-                        onChange={handleRememberMeChange}
-                        className="sr-only"
-                      />
-                      <div className={`w-4 h-4 rounded border ${formData.rememberMe ? 'bg-blue-500 border-blue-500' : 'border-gray-300'} flex items-center justify-center`}>
-                        {formData.rememberMe && (
-                          <Check className="w-3 h-3 text-white" />
-                        )}
-                      </div>
-                    </div>
+                    <input
+                      type="checkbox"
+                      name="rememberMe"
+                      checked={formData.rememberMe}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded border border-gray-300"
+                    />
                     <span className="ml-2 text-sm text-gray-200 select-none">Remember me</span>
                   </label>
-                  {formData.rememberMe && localStorage.getItem('savedEmail') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.removeItem('savedEmail');
-                        localStorage.removeItem('savedPassword');
-                        setFormData(prev => ({
-                          ...prev,
-                          email: '',
-                          password: '',
-                          rememberMe: false
-                        }));
-                        toast.success('Saved credentials cleared');
-                      }}
-                      className="text-xs text-red-300 hover:text-red-100 ml-2"
-                      title="Clear saved credentials"
-                    >
-                      Clear
-                    </button>
-                  )}
                 </div>
                 <Link 
                   to="/forgot-password" 

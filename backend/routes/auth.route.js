@@ -13,6 +13,7 @@ import {
   vhelp,
   markHelpCompleted,
   getMe,
+  refreshToken,
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
@@ -31,6 +32,9 @@ router.post("/volunteers", verifyToken, vhelp); // accepts a specific help reque
 router.post("/signup", signup);
 router.post("/login", login);
 router.post("/logout", logout);
+
+// Token refresh route
+router.post("/refresh-token", refreshToken);
 
 // Profile update route
 router.put("/update-profile", verifyToken, updateProfile);

@@ -35,7 +35,24 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    lastActivity: {
+      type: Date,
+      default: Date.now,
+    },
+    sessionToken: {
+      type: String,
+      default: null,
+    },
+    sessionExpiresAt: {
+      type: Date,
+      default: null,
+    },
     isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    // Indicates if a volunteer has been approved by admin
+    isApproved: {
       type: Boolean,
       default: false,
     },

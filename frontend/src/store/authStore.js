@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import toast from "react-hot-toast";
+import sessionManager from "../utils/sessionManager.js";
 
 const API_URL =
   import.meta.env.MODE === "development"
@@ -16,6 +17,8 @@ export const useAuthStore = create((set, get) => ({
   isLoading: false,
   isCheckingAuth: false,
   message: null,
+  
+  clearError: () => set({ error: null }),
   
   // Helper to normalize role names for comparison
   normalizeRole: (role) => {
@@ -86,6 +89,9 @@ export const useAuthStore = create((set, get) => ({
       // Call the backend API to handle signout, such as removing cookies
       await axios.post(`${API_URL}/logout`);
 
+      // Clear session manager
+      sessionManager.destroy();
+
       // Remove the token and clear user state
       localStorage.removeItem("userToken"); // Clear token from localStorage
       set({
@@ -120,6 +126,10 @@ export const useAuthStore = create((set, get) => ({
         error: null,
         isLoading: false,
       });
+
+      // Initialize session manager after successful login
+      sessionManager.init();
+
       return { success: true };
     } catch (error) {
       let errorMessage = 'An error occurred during login';
@@ -209,9 +219,50 @@ export const useAuthStore = create((set, get) => ({
         isCheckingAuth: false,
         error: null,
       });
+
+      // Initialize session manager if not already done
+      if (!sessionManager.isInitialized) {
+        sessionManager.init();
+      }
+
       return response.data.user;
     } catch (error) {
       console.error('Auth check failed:', error);
+      
+      // Handle banned user case
+      if (error.response?.status === 403 && error.response?.data?.isBanned) {
+        // Clear user data and tokens
+        set({
+          isAuthenticated: false,
+          user: null,
+          isCheckingAuth: false,
+          error: 'Your account has been suspended by an administrator.',
+        });
+        
+        // Clear any stored tokens
+        localStorage.removeItem("userToken");
+        
+        // Handle account termination
+        sessionManager.handleAccountTermination();
+        
+        return null;
+      }
+
+      // Handle session expiration
+      if (error.response?.status === 401) {
+        const message = error.response?.data?.message;
+        if (message?.includes('inactivity') || message?.includes('expired') || message?.includes('Invalid session')) {
+          sessionManager.handleInactivity();
+          return null;
+        }
+      }
+
+      // Handle internal errors
+      if (error.response?.status >= 500) {
+        sessionManager.handleInternalError();
+        return null;
+      }
+      
       set({
         isAuthenticated: false,
         user: null,

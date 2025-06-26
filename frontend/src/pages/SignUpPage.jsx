@@ -301,7 +301,14 @@ const SignUpPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signup, error: authError, isLoading, isAuthenticated, checkAuth, user } = useAuthStore();
+  const { signup, error: authError, isLoading, isAuthenticated, checkAuth, user, clearError } = useAuthStore();
+
+  useEffect(() => {
+    // Clear any leftover auth errors from other pages
+    if (authError) {
+      clearError();
+    }
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -414,7 +421,11 @@ const SignUpPage = () => {
         skillsToSubmit,
         formData.location
       );
-      navigate("/signup-success");
+      if (formData.category === 'Volunteer') {
+        navigate('/volunteer-pending-approval');
+      } else {
+        navigate('/signup-success');
+      }
     } catch (error) {
       console.error("Signup error:", error);
     } finally {
