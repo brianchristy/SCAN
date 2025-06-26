@@ -468,7 +468,7 @@ const CitizenPage = () => {
                                   value={formData.additional}
                                   onChange={handleChange}
                                   className="relative w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                                  placeholder="Any special requirements or timing preferences?"
+                                  placeholder="Any special requirements?"
                                 />
                               </div>
                             </div>
@@ -502,7 +502,7 @@ const CitizenPage = () => {
                               </div>
                             </div>
 
-                            <div className="group">
+                              <div className="group">
                               <label htmlFor="helpdate" className="block text-sm font-medium text-blue-300 mb-2">
                                 Date Needed <span className="text-red-400">*</span>
                               </label>
@@ -513,6 +513,7 @@ const CitizenPage = () => {
                                   name="helpdate"
                                   value={formData.helpdate}
                                   onChange={handleChange}
+                                  min={new Date().toISOString().split('T')[0]}
                                   className="relative w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                                   required
                                 />
@@ -530,6 +531,7 @@ const CitizenPage = () => {
                                   name="helptime"
                                   value={formData.helptime}
                                   onChange={handleChange}
+                                  min={formData.helpdate === new Date().toISOString().split('T')[0] ? new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : undefined}
                                   className="relative w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                                   required
                                 />

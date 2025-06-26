@@ -256,10 +256,10 @@ const LoginPage = () => {
               >
                 <div className="flex items-center space-x-2">
                   <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="rememberMe"
-                      checked={formData.rememberMe}
+                      <input
+                        type="checkbox"
+                        name="rememberMe"
+                        checked={formData.rememberMe}
                       onChange={handleChange}
                       className="w-4 h-4 rounded border border-gray-300"
                     />

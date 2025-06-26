@@ -168,10 +168,10 @@ export const logout = async (req, res) => {
     }
     
     // Clear cookies
-    res.clearCookie("token");
+  res.clearCookie("token");
     res.clearCookie("refreshToken");
     
-    res.status(200).json({ success: true, message: "Logged out successfully" });
+  res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (error) {
     console.error("Logout error:", error);
     res.status(500).json({ success: false, message: "Error during logout" });

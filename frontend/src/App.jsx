@@ -1,4 +1,16 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
+// Component to scroll to top on route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
@@ -14,7 +26,6 @@ import VolunteerPendingApprovalPage from "./pages/VolunteerPendingApprovalPage";
 
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./store/authStore";
-import { useEffect } from "react";
 import VolunteerPage from "./pages/VolunteerPage";
 import CitizenPage from "./pages/CitizenPage";
 import CitizenHome from "./pages/CitizenHome";
@@ -22,6 +33,8 @@ import VolunteerHome from "./pages/VolunteerHome";
 import CitizenProfile from "./pages/CitizenProfile";
 import VolunteerProfile from "./pages/VolunteerProfile";
 import AdminPanel from "./pages/AdminPanel";
+import AboutUsPage from "./pages/AboutUsPage";
+import ContactUsPage from "./pages/ContactUsPage";
 import { CitizenRoute, VolunteerRoute, RoleProtectedRoute, AdminRoute } from "./components/RoleProtectedRoute";
 
 // redirect authenticated users to the home page
@@ -55,7 +68,8 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
+      <ScrollToTop />
       <Routes>
         <Route 
           path="/" 
@@ -168,6 +182,8 @@ function App() {
         <Route path="/signup-success" element={<SignupSuccessPage />} />
         <Route path="/volunteer-pending-approval" element={<VolunteerPendingApprovalPage />} />
         <Route path="/email-verified-success" element={<EmailVerifiedSuccessPage />} />
+        <Route path="/about" element={<AboutUsPage />} />
+        <Route path="/contact" element={<ContactUsPage />} />
         {/* catch all routes */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

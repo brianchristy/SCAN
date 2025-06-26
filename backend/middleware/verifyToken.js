@@ -91,7 +91,7 @@ export const verifyToken = async (req, res, next) => {
         const { generateTokenAndSetCookie } = await import("../utils/generateTokenAndSetCookie.js");
         await generateTokenAndSetCookie(res, decoded.userId);
 
-        req.userId = decoded.userId;
+    req.userId = decoded.userId;
         return next();
       } catch (refreshError) {
         await clearUserSession(decoded?.userId);

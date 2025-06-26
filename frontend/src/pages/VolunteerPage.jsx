@@ -510,19 +510,18 @@ const VolunteerPage = () => {
                     <span>Time Needed: {request.helptime}</span>
                   </div>
                 )}
-                <div className="flex items-center text-base text-indigo-300 mt-2">
-                  <Calendar className="h-5 w-5 mr-2" />
+              </div>
+              <div className="flex items-center justify-between mt-6">
+                <div className="text-sm text-indigo-300 flex items-center">
                   <span>Requested on {new Date(request.createdAt).toLocaleDateString()}</span>
                 </div>
-              </div>
-              <div className="flex justify-end mt-6">
                 <button
                   onClick={() => handleAcceptRequest(request)}
                   disabled={isLoading}
-                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50"
-                  style={{ minWidth: '120px' }}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50"
+                  style={{ minWidth: '100px' }}
                 >
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-4 w-4" />
                   Accept
                 </button>
               </div>

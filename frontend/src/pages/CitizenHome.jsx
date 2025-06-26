@@ -1,66 +1,3 @@
-// import React from "react";
-// import { Link } from "react-router-dom";
-// import { useAuthStore } from "../store/authStore";
-// import seniorBackground from "../assets/seniordashboard.jpeg";
-
-// const CitizenHome = () => {
-//   const { signout } = useAuthStore();
-//   return (
-//     <div
-//       className="min-h-screen flex flex-col items-center justify-center"
-//       style={{
-//         backgroundImage: `url(${seniorBackground})`,
-//         backgroundSize: "cover",
-//         backgroundAttachment: "fixed",
-//         width: "100vw",
-//         height: "100vh",
-//       }}
-//     >
-//       {/* Navbar */}
-//       <header
-//         className="w-full p-4 text-white fixed top-0 left-0 flex justify-between items-center z-50 backdrop-blur-lg"
-//         style={{
-//           background:
-//             "linear-gradient(90deg, rgba(30, 64, 175, 0.4) 0%, rgba(59, 130, 246, 0.8) 100%)",
-//         }}
-//       >
-//         <Link
-//           to="/citizen-home"
-//           className="text-white font-bold px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 shadow-lg"
-//         >
-//           SCAN
-//         </Link>
-//         <button
-//           onClick={signout}
-//           className="bg-red-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-red-700 shadow-lg ml-auto"
-//         >
-//           Sign Out
-//         </button>
-//       </header>
-
-//       {/* Content */}
-//       <h1 className="text-4xl font-bold text-blue-700 mb-6">
-//         Welcome, Citizen
-//       </h1>
-//       <div className="space-y-4">
-//         <Link
-//           to="/citizen-profile"
-//           className="px-6 py-3 m-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700"
-//         >
-//           View or Update Details
-//         </Link>
-//         <Link
-//           to="/citizens"
-//           className="px-6 py-3 m-3 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-700"
-//         >
-//           Request Help
-//         </Link>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default CitizenHome;
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
@@ -69,7 +6,6 @@ import { LogOut, User, LifeBuoy, HeartPulse, Home } from "lucide-react";
 import backgroundImage from "../assets/signup-bg.jpg";
 import toast from "react-hot-toast";
 import Particles from 'react-particles';
-import { useCallback } from 'react';
 
 // Animation variants
 const containerVariants = {

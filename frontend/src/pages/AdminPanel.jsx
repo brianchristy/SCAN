@@ -305,7 +305,8 @@ const AdminPanel = () => {
                 <li key={volunteer._id} className="flex items-center justify-between p-4 border-b border-gray-700">
                   <div>
                     <p className="font-bold">{volunteer.name}</p>
-                    <p className="text-sm text-gray-400">{volunteer.email}</p>
+                    <p className="text-sm text-gray-400">Email: {volunteer.email}</p>
+                    <p className="text-sm text-gray-400">Contact No: {volunteer.contactno}</p>
                   </div>
                   <div>
                     <button 
