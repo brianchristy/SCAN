@@ -67,6 +67,7 @@ const VolunteerPage = () => {
   const [filterHelpType, setFilterHelpType] = useState('');
   const [isCompleting, setIsCompleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterDate, setFilterDate] = useState('');
   
   // Help categories for filtering
   const helpCategories = [
@@ -179,6 +180,8 @@ const VolunteerPage = () => {
         !request.location?.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
+    
+    if (filterDate && request.helpdate !== filterDate) return false;
     
     return true;
   });
@@ -321,6 +324,18 @@ const VolunteerPage = () => {
                 </p>
               </div>
             )}
+            {acceptedRequest.helpdate && (
+              <div className="mt-2 flex items-center text-indigo-200 text-sm">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>Date Needed: {acceptedRequest.helpdate}</span>
+              </div>
+            )}
+            {acceptedRequest.helptime && (
+              <div className="mt-1 flex items-center text-indigo-200 text-sm">
+                <Clock className="h-4 w-4 mr-2" />
+                <span>Time Needed: {acceptedRequest.helptime}</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center text-sm text-indigo-300">
             <Calendar className="h-4 w-4 mr-2" />
@@ -381,7 +396,7 @@ const VolunteerPage = () => {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-white mb-2">Location</label>
             <div className="relative">
@@ -398,7 +413,6 @@ const VolunteerPage = () => {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400 pointer-events-none" />
             </div>
           </div>
 
@@ -423,11 +437,24 @@ const VolunteerPage = () => {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">Date Needed</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white/20 border-2 border-indigo-500/40 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
           <div className="flex items-end">
             <button
               onClick={() => {
                 setFilterLocation('');
                 setFilterHelpType('');
+                setFilterDate('');
                 setSearchQuery('');
               }}
               className="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2 border border-indigo-500/50"
@@ -452,36 +479,52 @@ const VolunteerPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-indigo-500/50 transition-all hover:shadow-lg hover:shadow-indigo-500/10"
+              className="bg-white/10 backdrop-blur-lg rounded-3xl overflow-hidden border border-white/10 hover:border-indigo-500/50 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 p-8 min-h-[260px] flex flex-col justify-between"
             >
-              <div className="p-6">
+              <div className="flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-white">
+                  <h3 className="text-2xl font-bold text-white">
                     {request.helptitle}
                   </h3>
-                  <span className="bg-indigo-500/20 text-indigo-300 text-xs px-3 py-1 rounded-full">
+                  <span className="bg-indigo-500/20 text-indigo-300 text-sm px-3 py-1 rounded-full">
                     {request.location || 'Location not specified'}
                   </span>
                 </div>
-                <p className="text-indigo-100 mb-6 line-clamp-3">
+                <p className="text-indigo-100 mb-4 text-lg line-clamp-3">
                   {request.helpdescription}
                 </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-indigo-300">
-                    <Clock className="h-4 w-4 mr-1.5" />
-                    <span>
-                      {new Date(request.createdAt).toLocaleDateString()}
-                    </span>
+                {request.additional && (
+                  <div className="mb-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <span className="text-yellow-300 text-base font-medium">Note: {request.additional}</span>
                   </div>
-                  <button
-                    onClick={() => handleAcceptRequest(request)}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Accept
-                  </button>
+                )}
+                {request.helpdate && (
+                  <div className="flex items-center text-indigo-200 text-base mb-1">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    <span>Date Needed: {request.helpdate}</span>
+                  </div>
+                )}
+                {request.helptime && (
+                  <div className="flex items-center text-indigo-200 text-base mb-1">
+                    <Clock className="h-5 w-5 mr-2" />
+                    <span>Time Needed: {request.helptime}</span>
+                  </div>
+                )}
+                <div className="flex items-center text-base text-indigo-300 mt-2">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  <span>Requested on {new Date(request.createdAt).toLocaleDateString()}</span>
                 </div>
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => handleAcceptRequest(request)}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50"
+                  style={{ minWidth: '120px' }}
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  Accept
+                </button>
               </div>
             </motion.div>
           ))}

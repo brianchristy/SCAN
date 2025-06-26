@@ -306,7 +306,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  help: async (email, helptitle, helpdescription, additional, location, action = 'request') => {
+  help: async (email, helptitle, helpdescription, additional, location, helpdate, helptime, action = 'request') => {
     set({ isLoading: true, error: null });
     try {
       const response = await axios.post(`${API_URL}/citizens`, {
@@ -315,6 +315,8 @@ export const useAuthStore = create((set, get) => ({
         helpdescription,
         additional,
         location,
+        helpdate,
+        helptime,
         action
       });
       set({

@@ -311,7 +311,7 @@ export const checkAuth = async (req, res) => {
 
 
 export const help = async (req, res) => {
-  const { email, helptitle, helpdescription, additional, location, action } = req.body;
+  const { email, helptitle, helpdescription, additional, location, helpdate, helptime, action } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -326,6 +326,8 @@ export const help = async (req, res) => {
       user.helpdescription = helpdescription;
       user.additional = additional;
       user.location = location;
+      user.helpdate = helpdate;
+      user.helptime = helptime;
       user.helpstatus = false; // Set as active request
       user.volunteerDetails = { isAccepted: false }; // Reset volunteer details
     } else if (action === 'cancel') {
@@ -334,6 +336,8 @@ export const help = async (req, res) => {
       user.helpdescription = null;
       user.additional = null;
       user.location = null;
+      user.helpdate = null;
+      user.helptime = null;
       user.helpstatus = true;
       user.volunteerDetails = {}; // Clear volunteer details
     }

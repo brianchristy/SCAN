@@ -68,6 +68,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    helpdate: {
+      type: String,
+      default: null,
+    },
+    helptime: {
+      type: String,
+      default: null,
+    },
     helpstatus: {
       type: Boolean,
       default: true,

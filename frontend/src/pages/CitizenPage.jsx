@@ -18,7 +18,8 @@ import {
   Sparkles,
   ShieldCheck,
   HandHeart,
-  ArrowRight
+  ArrowRight,
+  Calendar
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
@@ -67,7 +68,9 @@ const CitizenPage = () => {
     helptitle: '',
     helpdescription: '',
     additional: '',
-    location: ''
+    location: '',
+    helpdate: '',
+    helptime: ''
   });
   
   const [selectedHelp, setSelectedHelp] = useState(null);
@@ -86,7 +89,9 @@ const CitizenPage = () => {
         helptitle: user.helptitle,
         helpdescription: user.helpdescription || '',
         additional: user.additional || '',
-        location: user.location || ''
+        location: user.location || '',
+        helpdate: user.helpdate || '',
+        helptime: user.helptime || ''
       });
       setSelectedHelp(user.helptitle);
     }
@@ -116,7 +121,7 @@ const CitizenPage = () => {
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.helpdescription || !formData.location) {
+    if (!formData.helpdescription || !formData.location || !formData.helpdate || !formData.helptime) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -129,6 +134,8 @@ const CitizenPage = () => {
         formData.helpdescription,
         formData.additional,
         formData.location,
+        formData.helpdate,
+        formData.helptime,
         'request' // Specify this is a help request
       );
       toast.success('Help request submitted successfully!');
@@ -153,6 +160,8 @@ const CitizenPage = () => {
         null,
         null,
         null,
+        null,
+        null,
         'cancel' // Specify this is a cancellation
       );
       
@@ -161,7 +170,9 @@ const CitizenPage = () => {
         helptitle: '',
         helpdescription: '',
         additional: '',
-        location: ''
+        location: '',
+        helpdate: '',
+        helptime: ''
       });
       setSelectedHelp(null);
       
@@ -491,6 +502,40 @@ const CitizenPage = () => {
                               </div>
                             </div>
 
+                            <div className="group">
+                              <label htmlFor="helpdate" className="block text-sm font-medium text-blue-300 mb-2">
+                                Date Needed <span className="text-red-400">*</span>
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="date"
+                                  id="helpdate"
+                                  name="helpdate"
+                                  value={formData.helpdate}
+                                  onChange={handleChange}
+                                  className="relative w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                                  required
+                                />
+                              </div>
+                            </div>
+
+                            <div className="group">
+                              <label htmlFor="helptime" className="block text-sm font-medium text-blue-300 mb-2">
+                                Time Needed <span className="text-red-400">*</span>
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="time"
+                                  id="helptime"
+                                  name="helptime"
+                                  value={formData.helptime}
+                                  onChange={handleChange}
+                                  className="relative w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                                  required
+                                />
+                              </div>
+                            </div>
+
                             <div className="pt-2">
                               <motion.button
                                 type="submit"
@@ -570,31 +615,15 @@ const CitizenPage = () => {
                           </p>
                         </div>
                       </div>
-
-                      {formData.helpdescription && (
-                        <div className="flex items-start p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-blue-500/30 transition-colors">
-                          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 flex items-center justify-center border border-white/10 shadow-inner">
-                            <AlertCircle className="h-5 w-5 text-blue-300" />
-                          </div>
-                          <div className="ml-4">
-                            <h4 className="text-sm font-medium text-blue-300 mb-1">Description</h4>
-                            <p className="text-white">{formData.helpdescription}</p>
-                          </div>
+                      <div className="flex items-start p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-blue-500/30 transition-colors">
+                        <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 flex items-center justify-center border border-white/10 shadow-inner">
+                          <AlertCircle className="h-5 w-5 text-blue-300" />
                         </div>
-                      )}
-
-                      {formData.additional && (
-                        <div className="flex items-start p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-blue-500/30 transition-colors">
-                          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 flex items-center justify-center border border-white/10 shadow-inner">
-                            <Clock className="h-5 w-5 text-blue-300" />
-                          </div>
-                          <div className="ml-4">
-                            <h4 className="text-sm font-medium text-blue-300 mb-1">Additional Info</h4>
-                            <p className="text-white">{formData.additional}</p>
-                          </div>
+                        <div className="ml-4">
+                          <h4 className="text-sm font-medium text-blue-300 mb-1">Description</h4>
+                          <p className="text-white">{formData.helpdescription}</p>
                         </div>
-                      )}
-
+                      </div>
                       <div className="flex items-start p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-blue-500/30 transition-colors">
                         <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 flex items-center justify-center border border-white/10 shadow-inner">
                           <MapPin className="h-5 w-5 text-blue-300" />
@@ -604,6 +633,28 @@ const CitizenPage = () => {
                           <p className="text-white">{formData.location}</p>
                         </div>
                       </div>
+                      {formData.helpdate && (
+                        <div className="flex items-start p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-blue-500/30 transition-colors">
+                          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 flex items-center justify-center border border-white/10 shadow-inner">
+                            <Calendar className="h-5 w-5 text-blue-300" />
+                          </div>
+                          <div className="ml-4">
+                            <h4 className="text-sm font-medium text-blue-300 mb-1">Date Needed</h4>
+                            <p className="text-white">{formData.helpdate}</p>
+                          </div>
+                        </div>
+                      )}
+                      {formData.helptime && (
+                        <div className="flex items-start p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-blue-500/30 transition-colors">
+                          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 flex items-center justify-center border border-white/10 shadow-inner">
+                            <Clock className="h-5 w-5 text-blue-300" />
+                          </div>
+                          <div className="ml-4">
+                            <h4 className="text-sm font-medium text-blue-300 mb-1">Time Needed</h4>
+                            <p className="text-white">{formData.helptime}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 

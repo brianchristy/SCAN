@@ -32,6 +32,7 @@ const AdminPanel = () => {
   const [userSearch, setUserSearch] = useState('');
   const [helpLocationFilter, setHelpLocationFilter] = useState('All');
   const [helpSkillFilter, setHelpSkillFilter] = useState('All');
+  const [helpDateFilter, setHelpDateFilter] = useState('');
   const { user, signout } = useAuthStore();
 
   const fetchPendingVolunteers = async () => {
@@ -255,7 +256,8 @@ const AdminPanel = () => {
   const filteredHelps = helps.filter(help => {
     const locationMatch = helpLocationFilter === 'All' || help.location === helpLocationFilter;
     const skillMatch = helpSkillFilter === 'All' || help.helptitle === helpSkillFilter;
-    return locationMatch && skillMatch;
+    const dateMatch = !helpDateFilter || help.helpdate === helpDateFilter;
+    return locationMatch && skillMatch && dateMatch;
   });
 
   if (loading) {
@@ -423,6 +425,13 @@ const AdminPanel = () => {
               <option value="All">All Skills</option>
               {helpCategories.map(cat => <option key={cat.id} value={cat.label}>{cat.label}</option>)}
             </select>
+            <input
+              type="date"
+              value={helpDateFilter}
+              onChange={e => setHelpDateFilter(e.target.value)}
+              className="bg-gray-700 p-2 rounded w-full text-white"
+              placeholder="Date Needed"
+            />
           </div>
           {loading ? <p>Loading...</p> : (
             <ul>
@@ -437,6 +446,12 @@ const AdminPanel = () => {
                       <div>
                         <p className="font-bold">{help.helptitle}</p>
                         <p className="text-sm text-gray-400">Requester: {help.name}</p>
+                        {help.helpdate && (
+                          <p className="text-xs text-blue-300 mt-1">Date Needed: {help.helpdate}</p>
+                        )}
+                        {help.helptime && (
+                          <p className="text-xs text-blue-300 mt-1">Time Needed: {help.helptime}</p>
+                        )}
                       </div>
                       <div className="text-right">
                         <span className={`font-semibold ${statusColor}`}>{status}</span>
