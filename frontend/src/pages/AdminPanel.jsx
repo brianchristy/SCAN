@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import { LogOut } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 const locations = [
   'Thiruvananthapuram', 'Kollam', 'Pathanamthitta', 'Alappuzha',
@@ -34,16 +35,25 @@ const AdminPanel = () => {
   const [helpSkillFilter, setHelpSkillFilter] = useState('All');
   const [helpDateFilter, setHelpDateFilter] = useState('');
   const { user, signout } = useAuthStore();
+  const navigate = useNavigate();
+
+  // Redirect non-admins to their respective home pages
+  if (user?.category !== "Admin") {
+    if (user?.category === "Volunteer") {
+      navigate("/volunteer-home");
+    } else if (user?.category === "Citizen") {
+      navigate("/citizen-home");
+    } else {
+      navigate("/");
+    }
+    return null;
+  }
 
   const fetchPendingVolunteers = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/volunteers/pending', {
         credentials: 'include',
-        headers: {
-          // Assuming the browser sends the cookie automatically.
-          // If using Authorization header, add it here.
-        },
       });
       const data = await res.json();
       if (data.success) {
@@ -62,9 +72,7 @@ const AdminPanel = () => {
   const fetchAllUsers = async (role) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users?role=${role}`, {
-        credentials: 'include',
-      });
+      const res = await fetch(`/api/admin/users?role=${role}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setUsers(data.users);
@@ -81,9 +89,7 @@ const AdminPanel = () => {
   const fetchAllHelps = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/helps', {
-        credentials: 'include',
-      });
+      const res = await fetch('/api/admin/helps', { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setHelps(data.helps);
@@ -100,9 +106,7 @@ const AdminPanel = () => {
   const fetchBannedUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/banned?category=${bannedCategory}`, {
-        credentials: 'include',
-      });
+      const res = await fetch(`/api/admin/users/banned?category=${bannedCategory}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setBannedUsers(data.users);
