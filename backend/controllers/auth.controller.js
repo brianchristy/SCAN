@@ -167,9 +167,17 @@ export const logout = async (req, res) => {
       await clearUserSession(req.userId);
     }
     
-    // Clear cookies
-  res.clearCookie("token");
-    res.clearCookie("refreshToken");
+    // Clear cookies with same options as set
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none"
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none"
+    });
     
   res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (error) {
