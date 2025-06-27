@@ -28,7 +28,11 @@ const EmailVerificationPage = () => {
         if (res.ok && data.success) {
           setStatus("success");
           setMessage(data.message || "Email verified successfully. You can now log in.");
-          setTimeout(() => navigate("/login"), 4000);
+          if (data.pendingApproval) {
+            setTimeout(() => navigate("/volunteer-pending-approval"), 4000);
+          } else {
+            setTimeout(() => navigate("/login"), 4000);
+          }
         } else {
           setStatus("error");
           setMessage(data.message || "Verification failed.");

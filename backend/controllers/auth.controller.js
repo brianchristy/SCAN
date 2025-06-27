@@ -62,22 +62,34 @@ export const signup = async (req, res) => {
         message: "User created successfully. Please check your email to verify your account.",
       });
     } else if (category === "Volunteer") {
-    const user = new User({
-      email,
-      password: hashedPassword,
-      name,
-      contactno,
-      category,
+      const user = new User({
+        email,
+        password: hashedPassword,
+        name,
+        contactno,
+        category,
         skills,
         location,
-        isVerified: true, // Volunteers are considered verified, but not approved
+        verificationToken: tokenHash,
+        verificationTokenExpiresAt,
+        isVerified: false, // Volunteers must verify email
         isApproved: false, // Must be approved by admin
       });
-    await user.save();
-    res.status(201).json({
-      success: true,
-        message: "Volunteer registration successful. Your account is pending admin approval.",
-    });
+      await user.save();
+      // Send verification email with the raw token
+      const verifyUrl = `${process.env.CLIENT_URL}/verify-email?token=${rawToken}`;
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your email for SCAN',
+        html: `<p>Hello ${user.name || ''},</p>
+          <p>Thank you for signing up as a volunteer for SCAN. Please verify your email by clicking the link below:</p>
+          <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+          <p>If you did not sign up, you can ignore this email.</p>`
+      });
+      res.status(201).json({
+        success: true,
+        message: "Volunteer registration successful. Please check your email to verify your account.",
+      });
     } else {
       throw new Error("Invalid category");
     }
@@ -104,6 +116,10 @@ export const verifyEmail = async (req, res) => {
     user.verificationToken = undefined;
     user.verificationTokenExpiresAt = undefined;
     await user.save();
+    // Custom message for volunteers
+    if (user.category === "Volunteer") {
+      return res.status(200).json({ success: true, message: "Email verified successfully. Your registration is pending admin approval.", pendingApproval: true });
+    }
     res.status(200).json({ success: true, message: "Email verified successfully. You can now log in." });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });

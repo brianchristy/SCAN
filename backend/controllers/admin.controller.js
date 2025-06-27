@@ -40,6 +40,9 @@ export const approveVolunteer = async (req, res) => {
       html: `<p>Hello ${volunteer.name},</p>
              <p>Your volunteer account for SCAN has been approved by an administrator.</p>
              <p>You can now log in to your account and start helping.</p>
+             <p>
+               <a href="${process.env.CLIENT_URL}/login">Log In to SCAN</a>
+             </p>
              <p>Thank you for joining our community!</p>`
     });
 

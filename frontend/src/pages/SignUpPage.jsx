@@ -422,7 +422,7 @@ const SignUpPage = () => {
         formData.location
       );
       if (formData.category === 'Volunteer') {
-        navigate('/volunteer-pending-approval');
+        navigate('/signup-success', { state: { volunteer: true } });
       } else {
         navigate('/signup-success');
       }
