@@ -23,7 +23,7 @@ export const generateTokenAndSetCookie = async (res, userId) => {
 	res.cookie("token", sessionToken, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
-		sameSite: "strict",
+		sameSite: "none",
 		maxAge: 15 * 60 * 1000, // 15 minutes
 	});
 
@@ -31,7 +31,7 @@ export const generateTokenAndSetCookie = async (res, userId) => {
 	res.cookie("refreshToken", refreshToken, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === "production",
-		sameSite: "strict",
+		sameSite: "none",
 		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 	});
 
