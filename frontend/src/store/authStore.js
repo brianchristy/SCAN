@@ -12,7 +12,7 @@ import sessionManager from "../utils/sessionManager.js";
 const API_URL =
   import.meta.env.MODE === "development"
     ? "http://localhost:5000/api/auth"
-    : import.meta.env.VITE_API_URL;
+    : "/api/auth";
 
 axios.defaults.withCredentials = true;
 
