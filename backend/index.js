@@ -18,7 +18,7 @@ const __dirname = path.resolve();
 app.use(cors({
 	origin: [
 		"http://localhost:5173",
-		"https://scan-frontend.onrender.com"
+		"https://scan-app.onrender.com"
 	],
 	credentials: true
 }));
