@@ -4,6 +4,10 @@ import { clearUserSession } from '../utils/generateTokenAndSetCookie.js';
 
 // 1. Get all pending volunteers
 export const getPendingVolunteers = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const volunteers = await User.find({ category: 'Volunteer', isApproved: false });
     res.status(200).json({ success: true, volunteers });
@@ -14,6 +18,10 @@ export const getPendingVolunteers = async (req, res) => {
 
 // 2. Approve a volunteer
 export const approveVolunteer = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { id } = req.params;
     const volunteer = await User.findOneAndUpdate(
@@ -43,6 +51,10 @@ export const approveVolunteer = async (req, res) => {
 
 // 3. Reject (delete) a volunteer
 export const rejectVolunteer = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { id } = req.params;
     const volunteer = await User.findOneAndDelete({ _id: id, category: 'Volunteer' });
@@ -72,6 +84,10 @@ export const rejectVolunteer = async (req, res) => {
 
 // 4. Get all users (volunteers or citizens)
 export const getAllUsers = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { role } = req.query;
     if (!role || (role !== 'Volunteer' && role !== 'Citizen')) {
@@ -87,10 +103,14 @@ export const getAllUsers = async (req, res) => {
 
 // 5. Delete a user
 export const deleteUser = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { id } = req.params;
-    const user = await User.findByIdAndDelete(id);
-    if (!user) {
+    const userToDelete = await User.findByIdAndDelete(id);
+    if (!userToDelete) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
@@ -99,9 +119,9 @@ export const deleteUser = async (req, res) => {
 
     // Send account termination email
     await sendEmail({
-      to: user.email,
+      to: userToDelete.email,
       subject: 'Your SCAN Account Has Been Terminated',
-      html: `<p>Hello ${user.name},</p>
+      html: `<p>Hello ${userToDelete.name},</p>
              <p>Your account on SCAN has been terminated by an administrator.</p>
              <p>If you would like to use our services again, you will need to sign up for a new account.</p>
              <p>If you believe this was a mistake, please contact support at scanserviceandhelp@gmail.com</p>
@@ -116,6 +136,10 @@ export const deleteUser = async (req, res) => {
 
 // 6. Get all help requests
 export const getAllHelps = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     // Find all users (citizens) with an active or in-progress help request
     const helps = await User.find({
@@ -130,19 +154,23 @@ export const getAllHelps = async (req, res) => {
 
 // 7. Mark help as completed
 export const completeHelp = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
-    if (!user || user.category !== 'Citizen') {
+    const userToUpdate = await User.findById(id);
+    if (!userToUpdate || userToUpdate.category !== 'Citizen') {
       return res.status(404).json({ success: false, message: 'Help request not found' });
     }
-    user.helptitle = null;
-    user.helpdescription = null;
-    user.additional = null;
-    user.location = null;
-    user.helpstatus = true;
-    user.volunteerDetails = {};
-    await user.save();
+    userToUpdate.helptitle = null;
+    userToUpdate.helpdescription = null;
+    userToUpdate.additional = null;
+    userToUpdate.location = null;
+    userToUpdate.helpstatus = true;
+    userToUpdate.volunteerDetails = {};
+    await userToUpdate.save();
     res.status(200).json({ success: true, message: 'Help marked as completed' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error' });
@@ -151,19 +179,23 @@ export const completeHelp = async (req, res) => {
 
 // 8. Cancel help
 export const cancelHelp = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
-    if (!user || user.category !== 'Citizen') {
+    const userToUpdate = await User.findById(id);
+    if (!userToUpdate || userToUpdate.category !== 'Citizen') {
       return res.status(404).json({ success: false, message: 'Help request not found' });
     }
-    user.helptitle = null;
-    user.helpdescription = null;
-    user.additional = null;
-    user.location = null;
-    user.helpstatus = true;
-    user.volunteerDetails = {};
-    await user.save();
+    userToUpdate.helptitle = null;
+    userToUpdate.helpdescription = null;
+    userToUpdate.additional = null;
+    userToUpdate.location = null;
+    userToUpdate.helpstatus = true;
+    userToUpdate.volunteerDetails = {};
+    await userToUpdate.save();
     res.status(200).json({ success: true, message: 'Help cancelled' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error' });
@@ -172,25 +204,29 @@ export const cancelHelp = async (req, res) => {
 
 // 9. Ban a user
 export const banUser = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
-    if (!user) {
+    const userToBan = await User.findById(id);
+    if (!userToBan) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
     // Banning sets verified to false and approved to true (to remove from pending)
-    user.isVerified = false;
-    user.isApproved = true; 
-    await user.save();
+    userToBan.isVerified = false;
+    userToBan.isApproved = true; 
+    await userToBan.save();
 
     // Clear user session
     await clearUserSession(id);
 
     // Send ban email
     await sendEmail({
-      to: user.email,
+      to: userToBan.email,
       subject: 'Your SCAN Account Has Been Suspended',
-      html: `<p>Hello ${user.name},</p>
+      html: `<p>Hello ${userToBan.name},</p>
              <p>Your account on SCAN has been suspended by an administrator. You will not be able to log in until further notice.</p>
              <p>If you believe this was a mistake, please contact support at scanserviceandhelp@gmail.com</p>`
     });
@@ -203,20 +239,24 @@ export const banUser = async (req, res) => {
 
 // 10. Unban a user
 export const unbanUser = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
-    if (!user) {
+    const userToUnban = await User.findById(id);
+    if (!userToUnban) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    user.isVerified = true;
-    await user.save();
+    userToUnban.isVerified = true;
+    await userToUnban.save();
 
     // Send unban email
     await sendEmail({
-      to: user.email,
+      to: userToUnban.email,
       subject: 'Your SCAN Account Has Been Restored',
-      html: `<p>Hello ${user.name},</p>
+      html: `<p>Hello ${userToUnban.name},</p>
              <p>Your account on SCAN has been restored by an administrator. You can now log in and use the platform again.</p>
              <p>Thank you for your patience.</p>`
     });
@@ -229,6 +269,10 @@ export const unbanUser = async (req, res) => {
 
 // 11. Get all banned users
 export const getBannedUsers = async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user || user.category !== 'Admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
   try {
     const { category, search } = req.query;
     let query = { isVerified: false };
