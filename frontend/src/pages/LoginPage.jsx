@@ -214,7 +214,7 @@ const LoginPage = () => {
           {/* Header */}
           <div className="p-8 text-center">
             <motion.div variants={itemVariants}>
-              <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+              <h1 className="text-3xl font-bold text-white mb-2">Welcome yyyyyyyyyyyyyyyyyyyyy Back</h1>
               <p className="text-blue-200">Sign in to your SCAN account</p>
             </motion.div>
           </div>

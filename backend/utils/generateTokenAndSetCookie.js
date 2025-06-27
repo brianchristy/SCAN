@@ -19,19 +19,21 @@ export const generateTokenAndSetCookie = async (res, userId) => {
 		lastActivity: new Date(),
 	});
 
+	const isProduction = process.env.NODE_ENV === "production";
+
 	// Set session token as httpOnly cookie (15 minutes)
 	res.cookie("token", sessionToken, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "none",
+		secure: isProduction,
+		sameSite: isProduction ? "none" : "lax",
 		maxAge: 15 * 60 * 1000, // 15 minutes
 	});
 
 	// Set refresh token as httpOnly cookie (7 days)
 	res.cookie("refreshToken", refreshToken, {
 		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "none",
+		secure: isProduction,
+		sameSite: isProduction ? "none" : "lax",
 		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 	});
 
