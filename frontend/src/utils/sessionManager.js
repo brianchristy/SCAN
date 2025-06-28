@@ -16,7 +16,6 @@ class SessionManager {
     if (this.isInitialized) return;
     
     this.setupActivityTracking();
-    this.setupBrowserCloseDetection();
     this.setupConnectionMonitoring();
     this.startHeartbeat();
     
@@ -59,17 +58,6 @@ class SessionManager {
     resetActivityTimeout();
   }
 
-  setupBrowserCloseDetection() {
-    const handleBeforeUnload = () => {
-      // Clear any stored tokens
-      localStorage.removeItem("userToken");
-      sessionStorage.clear();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('unload', handleBeforeUnload);
-  }
-
   setupConnectionMonitoring() {
     const handleOnline = () => {
       // Connection restored
@@ -92,14 +80,27 @@ class SessionManager {
 
   async sendHeartbeat() {
     try {
+      const refreshToken = sessionStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
       const response = await fetch(`${API_URL}/refresh-token`, {
         method: 'POST',
-        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
       });
       
       if (!response.ok) {
         throw new Error('Heartbeat failed');
       }
+
+      const data = await response.json();
+      // Update tokens
+      sessionStorage.setItem('sessionToken', data.sessionToken);
+      sessionStorage.setItem('refreshToken', data.refreshToken);
     } catch (error) {
       this.handleConnectionLoss();
     }
@@ -121,13 +122,9 @@ class SessionManager {
     const { signout } = useAuthStore.getState();
     
     // Clear all stored data
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // Clear cookies by setting them to expire
-    document.cookie.split(";").forEach(function(c) { 
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-    });
+    localStorage.removeItem('scanUser');
+    sessionStorage.removeItem('sessionToken');
+    sessionStorage.removeItem('refreshToken');
     
     // Call signout to clear auth state
     signout();

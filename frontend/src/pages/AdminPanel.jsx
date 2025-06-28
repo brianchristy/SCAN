@@ -50,11 +50,20 @@ const AdminPanel = () => {
     return null;
   }
 
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const sessionToken = sessionStorage.getItem('sessionToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${sessionToken}`
+    };
+  };
+
   const fetchPendingVolunteers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/volunteers/pending', {
-        credentials: 'include',
+      const res = await fetch('/api/admin/volunteers/pending', { 
+        headers: getAuthHeaders()
       });
       const data = await res.json();
       if (data.success) {
@@ -63,8 +72,7 @@ const AdminPanel = () => {
         toast.error(data.message || 'Failed to fetch pending volunteers');
       }
     } catch (error) {
-      toast.error('An error occurred while fetching volunteers.');
-      console.error(error);
+      toast.error('An error occurred while fetching pending volunteers.');
     } finally {
       setLoading(false);
     }
@@ -73,7 +81,9 @@ const AdminPanel = () => {
   const fetchAllUsers = async (role) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users?role=${role}`, { credentials: 'include' });
+      const res = await fetch(`/api/admin/users?role=${role}`, { 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         setUsers(data.users);
@@ -90,7 +100,9 @@ const AdminPanel = () => {
   const fetchAllHelps = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/helps', { credentials: 'include' });
+      const res = await fetch('/api/admin/helps', { 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         setHelps(data.helps);
@@ -107,7 +119,9 @@ const AdminPanel = () => {
   const fetchBannedUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/banned?category=${bannedCategory}`, { credentials: 'include' });
+      const res = await fetch(`/api/admin/users/banned?category=${bannedCategory}`, { 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         setBannedUsers(data.users);
@@ -124,7 +138,10 @@ const AdminPanel = () => {
   const handleBanUser = async (userId, list, setList) => {
     if (!window.confirm('Are you sure you want to ban this user?')) return;
     try {
-      const res = await fetch(`/api/admin/users/${userId}/ban`, { method: 'PATCH', credentials: 'include' });
+      const res = await fetch(`/api/admin/users/${userId}/ban`, { 
+        method: 'PATCH', 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('User banned.');
@@ -140,7 +157,10 @@ const AdminPanel = () => {
   const handleUnbanUser = async (userId) => {
     if (!window.confirm('Are you sure you want to unban this user?')) return;
     try {
-      const res = await fetch(`/api/admin/users/${userId}/unban`, { method: 'PATCH', credentials: 'include' });
+      const res = await fetch(`/api/admin/users/${userId}/unban`, { 
+        method: 'PATCH', 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('User unbanned.');
@@ -158,7 +178,7 @@ const AdminPanel = () => {
     try {
       const res = await fetch(`/api/admin/volunteers/${volunteerId}/approve`, {
         method: 'PATCH',
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (data.success) {
@@ -177,7 +197,7 @@ const AdminPanel = () => {
     try {
       const res = await fetch(`/api/admin/volunteers/${volunteerId}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (data.success) {
@@ -194,7 +214,10 @@ const AdminPanel = () => {
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this user? This is permanent.')) return;
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`/api/admin/users/${userId}`, { 
+        method: 'DELETE', 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('User deleted successfully!');
@@ -210,7 +233,10 @@ const AdminPanel = () => {
   const handleCompleteHelp = async (helpId) => {
     if (!window.confirm('Are you sure you want to mark this help request as complete?')) return;
     try {
-      const res = await fetch(`/api/admin/helps/${helpId}/complete`, { method: 'PATCH', credentials: 'include' });
+      const res = await fetch(`/api/admin/helps/${helpId}/complete`, { 
+        method: 'PATCH', 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('Help request marked as complete!');
@@ -226,7 +252,10 @@ const AdminPanel = () => {
   const handleCancelHelp = async (helpId) => {
     if (!window.confirm('Are you sure you want to cancel this help request?')) return;
     try {
-      const res = await fetch(`/api/admin/helps/${helpId}/cancel`, { method: 'PATCH', credentials: 'include' });
+      const res = await fetch(`/api/admin/helps/${helpId}/cancel`, { 
+        method: 'PATCH', 
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success) {
         toast.success('Help request cancelled.');

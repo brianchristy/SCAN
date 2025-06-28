@@ -8,7 +8,19 @@ const API_URL =
     ? "/api/auth"
     : "/api/auth";
 
-axios.defaults.withCredentials = true;
+// Configure axios to include auth token in headers
+axios.interceptors.request.use(
+  (config) => {
+    const sessionToken = sessionStorage.getItem('sessionToken');
+    if (sessionToken) {
+      config.headers.Authorization = `Bearer ${sessionToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Load persisted auth state from localStorage
 function getInitialAuthState() {
@@ -18,7 +30,9 @@ function getInitialAuthState() {
     const userStr = localStorage.getItem('scanUser');
     if (userStr) {
       user = JSON.parse(userStr);
-      isAuthenticated = true;
+      // Check if session token exists in sessionStorage
+      const sessionToken = sessionStorage.getItem('sessionToken');
+      isAuthenticated = !!sessionToken;
     }
   } catch {}
   return { user, isAuthenticated };
@@ -102,15 +116,17 @@ export const useAuthStore = create((set, get) => ({
   signout: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Call the backend API to handle signout, such as removing cookies
+      // Call the backend API to handle signout
       await axios.post(`${API_URL}/logout`);
 
       // Clear session manager
       sessionManager.destroy();
 
-      // Remove the token and clear user state
-      localStorage.removeItem("userToken"); // Clear token from localStorage
-      localStorage.removeItem('scanUser'); // Remove persisted user
+      // Clear all stored data
+      localStorage.removeItem('scanUser');
+      sessionStorage.removeItem('sessionToken');
+      sessionStorage.removeItem('refreshToken');
+      
       set({
         user: null,
         isAuthenticated: false,
@@ -135,13 +151,18 @@ export const useAuthStore = create((set, get) => ({
         email,
         password,
       });
+      
+      // Store tokens in sessionStorage (cleared when browser closes)
+      sessionStorage.setItem('sessionToken', response.data.sessionToken);
+      sessionStorage.setItem('refreshToken', response.data.refreshToken);
+      
       set({
         isAuthenticated: true,
         user: response.data.user,
         error: null,
         isLoading: false,
       });
-      // Persist to localStorage
+      // Persist user to localStorage
       localStorage.setItem('scanUser', JSON.stringify(response.data.user));
 
       // Initialize session manager after successful login
@@ -191,8 +212,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const response = await axios.put(
         `${API_URL}/update-profile`,
-        profileData,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        profileData
       );
       set({ user: response.data.user, isLoading: false });
       return response.data;
@@ -245,6 +265,50 @@ export const useAuthStore = create((set, get) => ({
 
       return response.data.user;
     } catch (error) {
+      // If session token is expired, try to refresh
+      if (error.response?.status === 401) {
+        const refreshToken = sessionStorage.getItem('refreshToken');
+        if (refreshToken) {
+          try {
+            const refreshResponse = await axios.post(`${API_URL}/refresh-token`, {
+              refreshToken
+            });
+            
+            // Store new tokens
+            sessionStorage.setItem('sessionToken', refreshResponse.data.sessionToken);
+            sessionStorage.setItem('refreshToken', refreshResponse.data.refreshToken);
+            
+            // Retry the original request
+            const retryResponse = await axios.get(`${API_URL}/me`);
+            set({
+              user: retryResponse.data.user,
+              isAuthenticated: true,
+              isCheckingAuth: false,
+              error: null,
+            });
+            localStorage.setItem('scanUser', JSON.stringify(retryResponse.data.user));
+            
+            if (!sessionManager.isInitialized) {
+              sessionManager.init();
+            }
+            
+            return retryResponse.data.user;
+          } catch (refreshError) {
+            // Refresh failed, clear tokens and logout
+            sessionStorage.removeItem('sessionToken');
+            sessionStorage.removeItem('refreshToken');
+            localStorage.removeItem('scanUser');
+            set({
+              isAuthenticated: false,
+              user: null,
+              isCheckingAuth: false,
+              error: 'Session expired. Please log in again.',
+            });
+            return null;
+          }
+        }
+      }
+
       // Handle banned user case
       if (error.response?.status === 403 && error.response?.data?.isBanned) {
         // Clear user data and tokens
@@ -256,7 +320,8 @@ export const useAuthStore = create((set, get) => ({
         });
         
         // Clear any stored tokens
-        localStorage.removeItem("userToken");
+        sessionStorage.removeItem('sessionToken');
+        sessionStorage.removeItem('refreshToken');
         
         // Handle account termination
         sessionManager.handleAccountTermination();
@@ -389,8 +454,7 @@ export const useAuthStore = create((set, get) => ({
           volunteerName: state.user?.name,
           volunteerContact: state.user?.contactno,
           volunteerId: state.user?._id,
-        },
-        { withCredentials: true }
+        }
       );
       
       // Update the local state with the updated request

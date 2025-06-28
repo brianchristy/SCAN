@@ -151,8 +151,8 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Generate token and set cookie
-    await generateTokenAndSetCookie(res, user._id);
+    // Generate tokens (not cookies)
+    const { sessionToken, refreshToken } = await generateTokenAndSetCookie(res, user._id);
 
     // Return user data (excluding password)
     const userResponse = {
@@ -177,6 +177,8 @@ export const login = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user: userResponse,
+      sessionToken,
+      refreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -190,24 +192,9 @@ export const logout = async (req, res) => {
       await clearUserSession(req.userId);
     }
     
-    const isProduction = process.env.NODE_ENV === "production";
-    
-    // Clear cookies with same options as set
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-    });
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-    });
-    
-  res.status(200).json({ success: true, message: "Logged out successfully" });
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({ success: false, message: "Error during logout" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -633,7 +620,7 @@ export const getMe = async (req, res) => {
 
 export const refreshToken = async (req, res) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const { refreshToken } = req.body;
     
     if (!refreshToken) {
       return res.status(401).json({ success: false, message: 'No refresh token provided' });
@@ -657,11 +644,13 @@ export const refreshToken = async (req, res) => {
     }
 
     // Generate new tokens
-    await generateTokenAndSetCookie(res, decoded.userId);
+    const { sessionToken, refreshToken: newRefreshToken } = await generateTokenAndSetCookie(res, decoded.userId);
 
     res.status(200).json({ 
       success: true, 
-      message: 'Token refreshed successfully' 
+      message: 'Token refreshed successfully',
+      sessionToken,
+      refreshToken: newRefreshToken,
     });
   } catch (error) {
     console.error('Token refresh error:', error);

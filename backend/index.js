@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import path from "path";
 
 import { connectDB } from "./db/connectDB.js";
@@ -15,17 +14,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
+
 // Allow both local and deployed frontend for CORS
 app.use(cors({
 	origin: [
 		"http://localhost:5173",
 		"https://scan-app.onrender.com"
-	],
-	credentials: true
+	]
 }));
 
 app.use(express.json()); // allows us to parse incoming requests:req.body
-app.use(cookieParser()); // allows us to parse incoming cookies
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
