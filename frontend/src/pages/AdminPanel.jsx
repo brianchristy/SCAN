@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import { LogOut } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const locations = [
   'Thiruvananthapuram', 'Kollam', 'Pathanamthitta', 'Alappuzha',
@@ -275,9 +276,7 @@ const AdminPanel = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <LoadingSpinner />
     );
   }
 

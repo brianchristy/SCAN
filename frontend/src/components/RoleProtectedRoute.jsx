@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useEffect } from "react";
+import LoadingSpinner from "./LoadingSpinner";
 
 // Helper function to normalize role names
 const normalizeRole = (role) => {
@@ -22,9 +23,7 @@ export const RoleProtectedRoute = ({ children, allowedRoles }) => {
 
   // If we're still checking auth, show loading
   if (isCheckingAuth) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>;
+    return <LoadingSpinner />;
   }
 
   // If not authenticated, redirect to login

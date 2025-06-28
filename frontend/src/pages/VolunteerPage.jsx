@@ -256,7 +256,7 @@ const VolunteerPage = () => {
       if (error.response?.data?.message) {
         setCompletionError(error.response.data.message);
       } else {
-        toast.error(error.message || 'Failed to complete request');
+      toast.error(error.message || 'Failed to complete request');
       }
     } finally {
       setIsCompleting(false);

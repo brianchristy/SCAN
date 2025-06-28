@@ -446,7 +446,7 @@ export const getProducts = async (req, res) => {
       'volunteerDetails.volunteerId': new mongoose.Types.ObjectId(userId),
       'volunteerDetails.isAccepted': true
     };
-
+    
     const myAcceptedRequest = await User.find(myAcceptedRequestQuery)
       .select('-password -verificationToken -verificationTokenExpiresAt');
 
