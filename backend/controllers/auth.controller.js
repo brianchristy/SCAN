@@ -18,12 +18,8 @@ export const signup = async (req, res) => {
     }
 
     const userAlreadyExists = await User.findOne({ email });
-    console.log("userAlreadyExists", userAlreadyExists);
-
     if (userAlreadyExists) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User already exists" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -127,52 +123,63 @@ export const verifyEmail = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
+
+    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    // Check if user is banned
+    if (user.isBanned) {
+      return res.status(403).json({ 
+        message: "Your account has been suspended by an administrator",
+        isBanned: true 
+      });
+    }
+
+    // Check if email is verified
+    if (!user.isVerified) {
+      return res.status(401).json({ message: "Email not verified" });
+    }
+
+    // Check password
     const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Block banned users (isVerified: false, but not a new user with a token)
-    if (!user.isVerified && !user.verificationToken) {
-      return res
-        .status(403)
-        .json({ success: false, message: "This account has been suspended." });
-    }
-
-    // Check if volunteer is approved
-    if (user.category === 'Volunteer' && !user.isApproved) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Your account is pending admin approval." });
-    }
-
+    // Generate token and set cookie
     await generateTokenAndSetCookie(res, user._id);
 
-    user.lastLogin = new Date();
-    user.lastActivity = new Date();
-    await user.save();
+    // Return user data (excluding password)
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      contactno: user.contactno,
+      category: user.category,
+      isVerified: user.isVerified,
+      isBanned: user.isBanned,
+      helptitle: user.helptitle,
+      helpdescription: user.helpdescription,
+      additional: user.additional,
+      location: user.location,
+      helpdate: user.helpdate,
+      helptime: user.helptime,
+      helpstatus: user.helpstatus,
+      volunteerDetails: user.volunteerDetails,
+      skills: user.skills,
+    };
 
     res.status(200).json({
-      success: true,
-      message: "Logged in successfully",
-      user: {
-        ...user._doc,
-        password: undefined,
-      },
+      message: "Login successful",
+      user: userResponse,
     });
   } catch (error) {
-    console.log("Error in login ", error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -249,38 +256,44 @@ export const updateProfile = async (req, res) => {
 
 
 export const forgotPassword = async (req, res) => {
-  const { email } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const { email } = req.body;
 
+    // Find user by email
+    const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiresAt = resetTokenExpiresAt;
-
+    // Save reset token to user
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
     await user.save();
 
-    // send email
-    await sendPasswordResetEmail(
-      user.email,
-      `${process.env.CLIENT_URL}/reset-password/${resetToken}`
-    );
+    // Send reset email
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const emailHtml = `
+      <h2>Password Reset Request</h2>
+      <p>You requested a password reset for your SCAN account.</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+    `;
 
-    res.status(200).json({
-      success: true,
-      message: "Password reset link sent to your email",
+    await sendEmail({
+      to: email,
+      subject: "Password Reset Request - SCAN",
+      html: emailHtml,
     });
+
+    res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
-    console.log("Error in forgotPassword ", error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({ message: "Error sending reset password email" });
   }
 };
 
@@ -289,33 +302,28 @@ export const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
+    // Find user by reset token
     const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpiresAt: { $gt: Date.now() },
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() },
     });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid or expired reset token" });
+      return res.status(400).json({ message: "Invalid or expired reset token" });
     }
 
-    // update password
-    const hashedPassword = await bcryptjs.hash(password, 10);
+    // Hash new password
+    const hashedPassword = await bcryptjs.hash(password, 12);
 
+    // Update user password and clear reset token
     user.password = hashedPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpiresAt = undefined;
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
     await user.save();
 
-    await sendResetSuccessEmail(user.email);
-
-    res
-      .status(200)
-      .json({ success: true, message: "Password reset successful" });
+    res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
-    console.log("Error in resetPassword ", error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({ message: "Error resetting password" });
   }
 };
 
@@ -323,89 +331,74 @@ export const checkAuth = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User not found" });
+      return res.status(401).json({ message: "User not found" });
     }
-
-    res.status(200).json({ success: true, user });
+    res.status(200).json({ user });
   } catch (error) {
-    console.log("Error in checkAuth ", error);
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 
 export const help = async (req, res) => {
-  const { email, helptitle, helpdescription, additional, location, helpdate, helptime, action } = req.body;
   try {
+    const { email, helptitle, helpdescription, additional, location, helpdate, helptime, action } = req.body;
+
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    if (action === 'request') {
-      // Validate that requested time is at least 3 hours in the future
-      if (helpdate && helptime) {
-        try {
-          const [year, month, day] = helpdate.split('-').map(Number);
-          const [hour, minute] = helptime.split(':').map(Number);
-          const requestDate = new Date(year, month - 1, day, hour, minute);
-          const threeHoursFromNow = new Date(Date.now() + 3 * 60 * 60 * 1000); // plus 3 hours
-          
-          if (requestDate < threeHoursFromNow) {
-            return res
-              .status(400)
-              .json({ success: false, message: "Help requests must be scheduled at least 3 hours in advance" });
-          }
-        } catch (error) {
-          return res
-            .status(400)
-            .json({ success: false, message: "Invalid date or time format" });
-        }
-      }
-
-      // Requesting help
+    if (action === "request") {
+      // Create new help request
       user.helptitle = helptitle;
       user.helpdescription = helpdescription;
       user.additional = additional;
       user.location = location;
       user.helpdate = helpdate;
       user.helptime = helptime;
-      user.helpstatus = false; // Set as active request
-      user.volunteerDetails = { isAccepted: false }; // Reset volunteer details
-    } else if (action === 'cancel') {
-      // Canceling help request
+      user.helpstatus = false; // Active request
+      user.volunteerDetails = null; // Clear any previous volunteer details
+    } else if (action === "cancel") {
+      // Cancel help request
       user.helptitle = null;
       user.helpdescription = null;
       user.additional = null;
       user.location = null;
       user.helpdate = null;
       user.helptime = null;
-      user.helpstatus = true;
-      user.volunteerDetails = {}; // Clear volunteer details
+      user.helpstatus = null;
+      user.volunteerDetails = null;
     }
 
     await user.save();
 
-    // Return the updated user data
-    const userData = {
-      ...user._doc,
-      password: undefined,
-      verificationToken: undefined,
-      verificationTokenExpiresAt: undefined
+    // Return updated user data
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      contactno: user.contactno,
+      category: user.category,
+      isVerified: user.isVerified,
+      isBanned: user.isBanned,
+      helptitle: user.helptitle,
+      helpdescription: user.helpdescription,
+      additional: user.additional,
+      location: user.location,
+      helpdate: user.helpdate,
+      helptime: user.helptime,
+      helpstatus: user.helpstatus,
+      volunteerDetails: user.volunteerDetails,
+      skills: user.skills,
     };
 
     res.status(200).json({
-      success: true,
-      message: action === 'request' ? "Help request submitted" : "Help request cancelled",
-      user: userData
+      message: action === "request" ? "Help request submitted successfully" : "Help request cancelled successfully",
+      user: userResponse,
     });
   } catch (error) {
-    console.log("Error in help request:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ message: "Error processing help request" });
   }
 };
 
@@ -444,7 +437,8 @@ export const getProducts = async (req, res) => {
     // Query 2: Get the specific request accepted by the current volunteer
     const myAcceptedRequestQuery = {
       'volunteerDetails.volunteerId': new mongoose.Types.ObjectId(userId),
-      'volunteerDetails.isAccepted': true
+      'volunteerDetails.isAccepted': true,
+      'helpstatus': false // Only return if not completed!
     };
     
     const myAcceptedRequest = await User.find(myAcceptedRequestQuery)
@@ -465,127 +459,154 @@ export const getProducts = async (req, res) => {
 
 
 export const vhelp = async (req, res) => {
-  const { email, volunteerName, volunteerContact, volunteerId } = req.body;
-
   try {
-    // Find the senior citizen by email
+    const { email, volunteerName, volunteerContact, volunteerId } = req.body;
+
     const seniorCitizen = await User.findOne({ email });
-
     if (!seniorCitizen) {
-      return res.status(404).json({ success: false, message: "Senior citizen not found" });
+      return res.status(404).json({ message: "Help request not found" });
     }
 
-    // Check if the help request is still available
-    if (!seniorCitizen.helptitle || seniorCitizen.helpstatus === true) {
-      return res.status(409).json({ success: false, message: "Help request is no longer available" });
+    // Check if request is already accepted
+    if (seniorCitizen.volunteerDetails && seniorCitizen.volunteerDetails.isAccepted) {
+      return res.status(400).json({ message: "This help request has already been accepted by another volunteer" });
     }
 
-    // Check if the request is already accepted by a volunteer
-    if (seniorCitizen.volunteerDetails?.isAccepted) {
-      return res.status(400).json({ success: false, message: "Help request already accepted" });
-    }
-
-    // Generate a 6-digit completion code
+    // Generate 6-digit completion code
     const completionCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Update senior's record with volunteer's details and acceptance
+    // Update the help request with volunteer details
     seniorCitizen.volunteerDetails = {
       name: volunteerName,
-      contactno: volunteerContact,
+      contact: volunteerContact,
       volunteerId: volunteerId,
       isAccepted: true,
       acceptedAt: new Date(),
       completionCode: completionCode
     };
-    seniorCitizen.helpstatus = false; // Mark request as resolved
 
     await seniorCitizen.save();
 
-    // Find the volunteer and update their assigned request
-    if (volunteerId) {
-      const volunteer = await User.findById(volunteerId);
-      if (volunteer) {
-        volunteer.assignedRequest = seniorCitizen._id;
-        await volunteer.save();
-      }
-    }
+    // Send email to citizen with volunteer details and completion code
+    const emailHtml = `
+      <h2>Your Help Request Has Been Accepted!</h2>
+      <p>Great news! A volunteer has accepted your help request.</p>
+      
+      <h3>Volunteer Details:</h3>
+      <ul>
+        <li><strong>Name:</strong> ${volunteerName}</li>
+        <li><strong>Contact:</strong> ${volunteerContact}</li>
+      </ul>
+      
+      <h3>Your Completion Code:</h3>
+      <p style="font-size: 24px; font-weight: bold; color: #4F46E5; background-color: #f3f4f6; padding: 10px; border-radius: 5px; text-align: center;">${completionCode}</p>
+      <p><em>Please provide this code to the volunteer when they complete your help request.</em></p>
+      
+      <h3>Request Details:</h3>
+      <ul>
+        <li><strong>Help Type:</strong> ${seniorCitizen.helptitle}</li>
+        <li><strong>Date:</strong> ${seniorCitizen.helpdate}</li>
+        <li><strong>Time:</strong> ${seniorCitizen.helptime}</li>
+        <li><strong>Location:</strong> ${seniorCitizen.location}</li>
+      </ul>
+      
+      <p>You can log in to your account to view more details: <a href="${process.env.FRONTEND_URL}/login">Login to SCAN</a></p>
+      
+      <p>Thank you for using SCAN!</p>
+    `;
 
-    // Send email to the citizen notifying them that a volunteer has accepted their request
-    try {
-      await sendEmail({
-        to: seniorCitizen.email,
-        subject: 'A Volunteer Has Accepted Your Request',
-        html: `<p>Hello ${seniorCitizen.name || ''},</p>
-          <p>Good news! A volunteer has accepted your help request on SCAN.</p>
-          <p><strong>Volunteer Name:</strong> ${volunteerName}</p>
-          <p><strong>Contact Number:</strong> ${volunteerContact}</p>
-          <p>The volunteer will reach out to you soon. You can also contact them directly if needed.</p>
-          <p><strong>Your Completion Code:</strong> <span style="font-size: 18px; font-weight: bold; color: #4f46e5;">${completionCode}</span></p>
-          <p>Please provide this code to the volunteer when they complete your request. This code is required for the volunteer to mark your request as completed.</p>
-          <p><a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log in to your SCAN account</a> to view your request status and more details.</p>
-          <p>Thank you for using SCAN!</p>`
-      });
-    } catch (emailError) {
-      console.error('Failed to send acceptance email to citizen:', emailError);
-    }
+    await sendEmail({
+      to: email,
+      subject: "Help Request Accepted - SCAN",
+      html: emailHtml,
+    });
 
-    // Return the updated senior citizen data
+    // Return updated user data
+    const userResponse = {
+      _id: seniorCitizen._id,
+      name: seniorCitizen.name,
+      email: seniorCitizen.email,
+      contactno: seniorCitizen.contactno,
+      category: seniorCitizen.category,
+      isVerified: seniorCitizen.isVerified,
+      isBanned: seniorCitizen.isBanned,
+      helptitle: seniorCitizen.helptitle,
+      helpdescription: seniorCitizen.helpdescription,
+      additional: seniorCitizen.additional,
+      location: seniorCitizen.location,
+      helpdate: seniorCitizen.helpdate,
+      helptime: seniorCitizen.helptime,
+      helpstatus: seniorCitizen.helpstatus,
+      volunteerDetails: seniorCitizen.volunteerDetails,
+      skills: seniorCitizen.skills,
+    };
+
     res.status(200).json({
-      success: true,
-      message: "Help request accepted",
-      seniorCitizen: seniorCitizen
+      message: "Help request accepted successfully",
+      seniorCitizen: userResponse,
     });
   } catch (error) {
-    console.log("Error in vhelp ", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ message: "Error accepting help request" });
   }
 };
 
 export const markHelpCompleted = async (req, res) => {
-  const { email, completionCode, isAdmin } = req.body;
-
   try {
-    // Find the senior citizen by email
+    const { email, completionCode, isAdmin } = req.body;
+
     const user = await User.findOne({ email });
-
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Senior citizen not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // If not admin, verify completion code
-    if (!isAdmin) {
-      if (!completionCode) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Completion code is required" });
-      }
-
-      // Check if the completion code matches
-      if (user.volunteerDetails?.completionCode !== completionCode) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid completion code" });
-      }
+    // Check if there's an active help request
+    if (!user.helptitle || user.helpstatus) {
+      return res.status(400).json({ message: "No active help request found" });
     }
 
-    // Reset help request status and volunteer details
-    user.helptitle = null;
-    user.helpdescription = null;
-    user.additional = null;
-    user.location = null;
+    // Check if volunteer is assigned
+    if (!user.volunteerDetails || !user.volunteerDetails.isAccepted) {
+      return res.status(400).json({ message: "No volunteer assigned to this request" });
+    }
+
+    // Verify completion code (skip for admin)
+    if (!isAdmin && user.volunteerDetails.completionCode !== completionCode) {
+      return res.status(400).json({ message: "Invalid completion code" });
+    }
+
+    // Mark help as completed
     user.helpstatus = true;
-    user.volunteerDetails = {}; // Clear volunteer details
+    user.volunteerDetails.completedAt = new Date();
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Help marked as completed",
+    // Send completion email to citizen
+    const emailHtml = `
+      <h2>Help Request Completed!</h2>
+      <p>Your help request has been marked as completed.</p>
+      
+      <h3>Request Details:</h3>
+      <ul>
+        <li><strong>Help Type:</strong> ${user.helptitle}</li>
+        <li><strong>Date:</strong> ${user.helpdate}</li>
+        <li><strong>Time:</strong> ${user.helptime}</li>
+        <li><strong>Location:</strong> ${user.location}</li>
+        <li><strong>Completed At:</strong> ${new Date().toLocaleString()}</li>
+      </ul>
+      
+      <p>Thank you for using SCAN! We hope you received the help you needed.</p>
+      
+      <p>You can log in to your account to request more help: <a href="${process.env.FRONTEND_URL}/login">Login to SCAN</a></p>
+    `;
+
+    await sendEmail({
+      to: email,
+      subject: "Help Request Completed - SCAN",
+      html: emailHtml,
     });
+
+    res.status(200).json({ message: "Help request marked as completed successfully" });
   } catch (error) {
-    console.log("Error in marking help as completed:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ message: "Error marking help as completed" });
   }
 };
 
@@ -672,30 +693,31 @@ export const checkExpiredHelpRequests = async () => {
           const [hour, minute] = request.helptime.split(':').map(Number);
           const requestDateTime = new Date(year, month - 1, day, hour, minute);
           
-          // Check if the request time has passed
-          if (requestDateTime < now) {
+          // Check if the request has expired (past the requested time)
+          if (now > requestDateTime) {
             // Send email notification to citizen
-            try {
-              await sendEmail({
-                to: request.email,
-                subject: 'No Volunteers Available for Your Help Request',
-                html: `<p>Hello ${request.name || ''},</p>
-                  <p>We regret to inform you that no volunteers were available to accept your help request for <strong>${request.helptitle}</strong> scheduled for ${request.helpdate} at ${request.helptime}.</p>
-                  <p>Your request has now expired. You can submit a new help request if you still need assistance.</p>
-                  <p><strong>Request Details:</strong></p>
-                  <ul>
-                    <li>Type of Help: ${request.helptitle}</li>
-                    <li>Description: ${request.helpdescription}</li>
-                    <li>Location: ${request.location}</li>
-                    <li>Date: ${request.helpdate}</li>
-                    <li>Time: ${request.helptime}</li>
-                  </ul>
-                  <p><a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log in to your SCAN account</a> to submit a new request.</p>
-                  <p>Thank you for using SCAN!</p>`
-              });
-            } catch (emailError) {
-              console.error('Failed to send expiration email to citizen:', emailError);
-            }
+            const emailHtml = `
+              <h2>Help Request Expired</h2>
+              <p>Your help request has expired without being accepted by a volunteer.</p>
+              
+              <h3>Request Details:</h3>
+              <ul>
+                <li><strong>Help Type:</strong> ${request.helptitle}</li>
+                <li><strong>Date:</strong> ${request.helpdate}</li>
+                <li><strong>Time:</strong> ${request.helptime}</li>
+                <li><strong>Location:</strong> ${request.location}</li>
+              </ul>
+              
+              <p>You can create a new help request at any time: <a href="${process.env.FRONTEND_URL}/login">Login to SCAN</a></p>
+              
+              <p>Thank you for using SCAN!</p>
+            `;
+
+            await sendEmail({
+              to: request.email,
+              subject: "Help Request Expired - SCAN",
+              html: emailHtml,
+            });
 
             // Clear the expired request
             request.helptitle = null;
@@ -704,18 +726,16 @@ export const checkExpiredHelpRequests = async () => {
             request.location = null;
             request.helpdate = null;
             request.helptime = null;
-            request.helpstatus = true;
-            request.volunteerDetails = {};
-            
+            request.helpstatus = null;
+            request.volunteerDetails = null;
             await request.save();
-            console.log(`Expired help request cleared for user: ${request.email}`);
           }
         } catch (parseError) {
-          console.error('Error parsing date/time for request:', parseError);
+          // Handle date parsing errors silently
         }
       }
     }
   } catch (error) {
-    console.error('Error checking expired help requests:', error);
+    // Handle any errors silently
   }
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { Link, useNavigate } from 'react-router-dom';
@@ -68,7 +68,6 @@ const CitizenProfile = () => {
         navigate('/citizen-home');
       }, 1500);
     } catch (error) {
-      console.error('Update error:', error);
       toast.error(error.response?.data?.message || 'Failed to update profile. Please try again.');
     } finally {
       setIsUpdating(false);

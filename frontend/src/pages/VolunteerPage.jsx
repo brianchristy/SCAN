@@ -102,9 +102,6 @@ const VolunteerPage = () => {
           (req) => req && req.helptitle && req.helpdescription
         );
         
-        console.log("Products from backend:", validProducts);
-        console.log("Current volunteer ID:", user?._id);
-        
         // Check for any previously accepted request associated with this volunteer
         const alreadyAccepted = validProducts.find(
           (req) => 
@@ -112,8 +109,6 @@ const VolunteerPage = () => {
             req.volunteerDetails.isAccepted &&
             String(req.volunteerDetails.volunteerId) === String(user?._id)
         );
-
-        console.log("Found accepted request:", alreadyAccepted);
 
         // Set location filter to volunteer's location if not already set
         if (user?.location && !filterLocation) {
@@ -129,7 +124,6 @@ const VolunteerPage = () => {
         }
       }
     } catch (error) {
-      console.error('Error refreshing data:', error);
       toast.error('Failed to refresh data');
     } finally {
       setIsLoading(false);

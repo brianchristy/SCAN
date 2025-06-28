@@ -117,6 +117,7 @@ const CitizenPage = () => {
   
   const [selectedHelp, setSelectedHelp] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeError, setTimeError] = useState('');
   const { user, help, markHelpCompleted, isLoading, signout, checkAuth } = useAuthStore();
   const navigate = useNavigate();
   const intervalRef = useRef();
@@ -167,19 +168,17 @@ const CitizenPage = () => {
   // Handle help request submission
   const handleHelpReq = async (e) => {
     e.preventDefault();
-    
+    setTimeError('');
     // Validate required fields
     if (!formData.helpdescription || !formData.location || !formData.helpdate || !formData.helptime) {
       toast.error('Please fill in all required fields');
       return;
     }
-
     // Validate that requested time is at least 3 hours in the future
     if (!isTimeValid(formData.helpdate, formData.helptime)) {
-      toast.error('Help requests must be scheduled at least 3 hours in advance');
+      setTimeError('Can only request for help at least 3 hours in advance.');
       return;
     }
-
     setIsSubmitting(true);
     try {
       await help(
@@ -194,7 +193,6 @@ const CitizenPage = () => {
       );
       toast.success('Help request submitted successfully!');
     } catch (error) {
-      console.error('Error submitting help request:', error);
       toast.error(error.response?.data?.message || 'Failed to submit help request');
     } finally {
       setIsSubmitting(false);
@@ -595,12 +593,17 @@ const CitizenPage = () => {
                                   name="helptime"
                                   value={formData.helptime}
                                   onChange={handleChange}
-                                  min={getMinimumTime()}
                                   className="relative w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                                   required
                                 />
                               </div>
                             </div>
+
+                            {timeError && (
+                              <div className="text-red-400 text-sm mt-1 flex items-center">
+                                <AlertCircle size={16} className="mr-1" /> {timeError}
+                              </div>
+                            )}
 
                             <div className="pt-2">
                               <motion.button

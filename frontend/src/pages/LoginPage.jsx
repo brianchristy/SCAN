@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, Loader, Eye, EyeOff, AlertCircle, Check, X, Home } from "lucide-react";
+import { motion } from "framer-motion";
+import { Mail, Lock, Loader, Eye, EyeOff, AlertCircle, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import toast, { Toaster } from "react-hot-toast";

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import { LogOut } from 'lucide-react';

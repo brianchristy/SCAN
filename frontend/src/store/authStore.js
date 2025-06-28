@@ -3,12 +3,6 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import sessionManager from "../utils/sessionManager.js";
 
-//const API_URL = "https://scan-backend-64s8.onrender.com";
-// const API_URL =
-//   import.meta.env.MODE === "development"
-//     ? "http://localhost:5000/api/auth"
-//     : "/api/auth";
-
 const API_URL =
   import.meta.env.MODE === "development"
     ? "/api/auth"
@@ -126,13 +120,11 @@ export const useAuthStore = create((set, get) => ({
 
       window.location.href = "/login"; // Redirect to login page after signout
 
-      console.log("User signed out successfully");
     } catch (error) {
       set({
         error: error.response?.data?.message || "Error signing out",
         isLoading: false,
       });
-      console.error("Signout Error:", error);
     }
   },
 
@@ -205,7 +197,6 @@ export const useAuthStore = create((set, get) => ({
       set({ user: response.data.user, isLoading: false });
       return response.data;
     } catch (error) {
-      console.error("Error updating profile:", error);
       set({
         error: error.response?.data?.message || "Error updating profile",
         isLoading: false,
@@ -254,8 +245,6 @@ export const useAuthStore = create((set, get) => ({
 
       return response.data.user;
     } catch (error) {
-      console.error('Auth check failed:', error);
-      
       // Handle banned user case
       if (error.response?.status === 403 && error.response?.data?.isBanned) {
         // Clear user data and tokens
@@ -372,23 +361,18 @@ export const useAuthStore = create((set, get) => ({
 
   fetchProducts: async () => {
     try {
-      console.log('Making request to:', `${API_URL}/volunteers`);
       const response = await axios.get(`${API_URL}/volunteers`);
-      console.log('API Response:', response);
       
       if (response.data.success) {
-        console.log('Setting products:', response.data.data);
         set({ products: response.data.data });
         return response.data.data; // Return the data for use in components
       } else {
         const errorMsg = response.data.message || 'Unknown error fetching products';
-        console.error("Fetch Products Error:", errorMsg);
         set({ error: errorMsg });
         return [];
       }
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Error fetching products";
-      console.error("Error in fetchProducts:", errorMsg, error);
       set({ error: errorMsg });
       return [];
     }

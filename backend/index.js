@@ -38,14 +38,10 @@ if (process.env.NODE_ENV === "production") {
 	});
 }
 
-// Schedule job to check for expired help requests every 5 minutes
+// Schedule the expired help requests check to run every 5 minutes
 setInterval(async () => {
-	console.log('Checking for expired help requests...');
 	await checkExpiredHelpRequests();
 }, 5 * 60 * 1000); // 5 minutes
-
-// Also run once on server startup
-checkExpiredHelpRequests();
 
 app.listen(PORT, () => {
 	connectDB();

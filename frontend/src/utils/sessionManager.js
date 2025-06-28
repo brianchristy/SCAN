@@ -1,11 +1,5 @@
 import { useAuthStore } from '../store/authStore';
 
-//const API_URL = "https://scan-backend-64s8.onrender.com";
-// const API_URL =
-//   import.meta.env.MODE === "development"
-//     ? "http://localhost:5000/api/auth"
-//     : "/api/auth";
-
 const API_URL =
   import.meta.env.MODE === "development"
     ? "/api/auth"
@@ -78,11 +72,10 @@ class SessionManager {
 
   setupConnectionMonitoring() {
     const handleOnline = () => {
-      console.log('Connection restored');
+      // Connection restored
     };
 
     const handleOffline = () => {
-      console.log('Connection lost');
       this.handleConnectionLoss();
     };
 
@@ -108,23 +101,19 @@ class SessionManager {
         throw new Error('Heartbeat failed');
       }
     } catch (error) {
-      console.error('Heartbeat failed:', error);
       this.handleConnectionLoss();
     }
   }
 
   handleInactivity() {
-    console.log('Session expired due to inactivity');
     this.forceLogout('Session expired due to inactivity');
   }
 
   handleConnectionLoss() {
-    console.log('Connection terminated');
     this.forceLogout('Connection terminated');
   }
 
   handleInternalError() {
-    console.log('Internal error occurred');
     this.forceLogout('Internal error occurred');
   }
 
@@ -142,8 +131,6 @@ class SessionManager {
     
     // Call signout to clear auth state
     signout();
-    
-    console.log(`Logged out: ${reason}`);
   }
 
   // Method to be called when user is banned or account is deleted
