@@ -61,4 +61,14 @@ router.post("/check-expired-requests", verifyToken, async (req, res) => {
   }
 });
 
+// Public route to manually check expired help requests (for testing)
+router.post("/check-expired-requests-public", async (req, res) => {
+  try {
+    await checkExpiredHelpRequests();
+    res.status(200).json({ success: true, message: "Expired requests check completed" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error checking expired requests" });
+  }
+});
+
 export default router;

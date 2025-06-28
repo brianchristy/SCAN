@@ -41,6 +41,9 @@ setInterval(async () => {
 	await checkExpiredHelpRequests();
 }, 5 * 60 * 1000); // 5 minutes
 
+// Also run it immediately when server starts
+checkExpiredHelpRequests();
+
 app.listen(PORT, () => {
 	connectDB();
 	console.log("Server is running on port: ", PORT);
