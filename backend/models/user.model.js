@@ -80,15 +80,13 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    acceptedBy: {
-      volunteerName: { type: String, default: null },
-      volunteerContact: { type: String, default: null },
-    },
     volunteerDetails: {
       name: { type: String, default: null },
       contactno: { type: String, default: null },
       isAccepted: { type: Boolean, default: false },
-      volunteerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
+      volunteerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      completionCode: { type: String, default: null },
+      acceptedAt: { type: Date, default: null }
     },
     resetPasswordToken: String,
     resetPasswordExpiresAt: Date,

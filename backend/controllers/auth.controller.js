@@ -347,6 +347,26 @@ export const help = async (req, res) => {
     }
 
     if (action === 'request') {
+      // Validate that requested time is at least 3 hours in the future
+      if (helpdate && helptime) {
+        try {
+          const [year, month, day] = helpdate.split('-').map(Number);
+          const [hour, minute] = helptime.split(':').map(Number);
+          const requestDate = new Date(year, month - 1, day, hour, minute);
+          const threeHoursFromNow = new Date(Date.now() + 3 * 60 * 60 * 1000); // plus 3 hours
+          
+          if (requestDate < threeHoursFromNow) {
+            return res
+              .status(400)
+              .json({ success: false, message: "Help requests must be scheduled at least 3 hours in advance" });
+          }
+        } catch (error) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid date or time format" });
+        }
+      }
+
       // Requesting help
       user.helptitle = helptitle;
       user.helpdescription = helpdescription;
@@ -451,13 +471,17 @@ export const vhelp = async (req, res) => {
       return res.status(400).json({ success: false, message: "Help request already accepted" });
     }
 
+    // Generate a 6-digit completion code
+    const completionCode = Math.floor(100000 + Math.random() * 900000).toString();
+
     // Update senior's record with volunteer's details and acceptance
     seniorCitizen.volunteerDetails = {
       name: volunteerName,
       contactno: volunteerContact,
       volunteerId: volunteerId,
       isAccepted: true,
-      acceptedAt: new Date()
+      acceptedAt: new Date(),
+      completionCode: completionCode
     };
     seniorCitizen.helpstatus = false; // Mark request as resolved
 
@@ -482,6 +506,8 @@ export const vhelp = async (req, res) => {
           <p><strong>Volunteer Name:</strong> ${volunteerName}</p>
           <p><strong>Contact Number:</strong> ${volunteerContact}</p>
           <p>The volunteer will reach out to you soon. You can also contact them directly if needed.</p>
+          <p><strong>Your Completion Code:</strong> <span style="font-size: 18px; font-weight: bold; color: #4f46e5;">${completionCode}</span></p>
+          <p>Please provide this code to the volunteer when they complete your request. This code is required for the volunteer to mark your request as completed.</p>
           <p><a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log in to your SCAN account</a> to view your request status and more details.</p>
           <p>Thank you for using SCAN!</p>`
       });
@@ -502,7 +528,7 @@ export const vhelp = async (req, res) => {
 };
 
 export const markHelpCompleted = async (req, res) => {
-  const { email } = req.body;
+  const { email, completionCode, isAdmin } = req.body;
 
   try {
     // Find the senior citizen by email
@@ -512,6 +538,22 @@ export const markHelpCompleted = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Senior citizen not found" });
+    }
+
+    // If not admin, verify completion code
+    if (!isAdmin) {
+      if (!completionCode) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Completion code is required" });
+      }
+
+      // Check if the completion code matches
+      if (user.volunteerDetails?.completionCode !== completionCode) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid completion code" });
+      }
     }
 
     // Reset help request status and volunteer details

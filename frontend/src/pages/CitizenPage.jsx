@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   HandHeart,
   ArrowRight,
-  Calendar
+  Calendar,
+  RefreshCw
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
@@ -78,6 +79,31 @@ function isCancelAllowed(helpdate, helptime) {
   }
 }
 
+// Utility: check if requested time is at least 3 hours in the future
+function isTimeValid(helpdate, helptime) {
+  if (!helpdate || !helptime) return false;
+  try {
+    // helpdate: 'YYYY-MM-DD', helptime: 'HH:MM'
+    const [year, month, day] = helpdate.split('-').map(Number);
+    const [hour, minute] = helptime.split(':').map(Number);
+    const requestDate = new Date(year, month - 1, day, hour, minute);
+    const threeHoursFromNow = new Date(Date.now() + 3 * 60 * 60 * 1000); // plus 3 hours
+    return requestDate >= threeHoursFromNow;
+  } catch {
+    return false;
+  }
+}
+
+// Utility: get minimum time for today (3 hours from now)
+function getMinimumTime() {
+  const threeHoursFromNow = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  return threeHoursFromNow.toLocaleTimeString('en-US', { 
+    hour12: false, 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+}
+
 const CitizenPage = () => {
   // Form state
   const [formData, setFormData] = useState({
@@ -113,11 +139,17 @@ const CitizenPage = () => {
     }
   }, [hasActiveRequest, user]);
 
-  // Polling: refresh user/request status every 30 seconds if waiting for volunteer
+  // Polling: refresh user/request status every 10 seconds if waiting for volunteer or if volunteer is assigned
   useEffect(() => {
-    if (hasActiveRequest && !user?.volunteerDetails?.name) {
+    if (hasActiveRequest) {
       intervalRef.current = setInterval(async () => {
+        const previousUser = user;
         await checkAuth();
+        
+        // Check if help was completed (user had volunteerDetails before but now doesn't)
+        if (previousUser?.volunteerDetails?.name && !user?.volunteerDetails?.name && user?.helpstatus === true) {
+          toast.success('Your help request has been marked as completed by the volunteer!');
+        }
       }, 10000);
     }
     return () => clearInterval(intervalRef.current);
@@ -139,6 +171,12 @@ const CitizenPage = () => {
     // Validate required fields
     if (!formData.helpdescription || !formData.location || !formData.helpdate || !formData.helptime) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Validate that requested time is at least 3 hours in the future
+    if (!isTimeValid(formData.helpdate, formData.helptime)) {
+      toast.error('Help requests must be scheduled at least 3 hours in advance');
       return;
     }
 
@@ -278,6 +316,16 @@ const CitizenPage = () => {
             >
               <User size={20} />
               Profile
+            </button>
+            <button
+              onClick={async () => {
+                await checkAuth();
+                toast.success('Status refreshed!');
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <RefreshCw size={20} />
+              Refresh
             </button>
             <button
               onClick={handleSignOut}
@@ -547,7 +595,7 @@ const CitizenPage = () => {
                                   name="helptime"
                                   value={formData.helptime}
                                   onChange={handleChange}
-                                  min={formData.helpdate === new Date().toISOString().split('T')[0] ? new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : undefined}
+                                  min={getMinimumTime()}
                                   className="relative w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                                   required
                                 />
@@ -704,15 +752,15 @@ const CitizenPage = () => {
                                 <Phone className="h-4 w-4 mr-2" />
                                 Call Volunteer
                               </a>
-                              <motion.button
-                                onClick={handleMarkHelpCompleted}
-                                className="flex-1 flex items-center justify-center px-4 py-3 bg-white/10 border border-white/10 rounded-lg text-white hover:bg-white/20 transition-colors whitespace-nowrap"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                              >
-                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                Mark as Completed
-                              </motion.button>
+                            </div>
+                            <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                              <h4 className="text-sm font-medium text-blue-300 mb-2">Completion Code</h4>
+                              <p className="text-white text-lg font-mono font-bold tracking-wider">
+                                {user.volunteerDetails.completionCode}
+                              </p>
+                              <p className="text-blue-200 text-sm mt-2">
+                                Provide this code to your volunteer when they complete your request.
+                              </p>
                             </div>
                           </div>
                         </div>

@@ -167,14 +167,16 @@ export const completeHelp = async (req, res) => {
     if (!userToUpdate || userToUpdate.category !== 'Citizen') {
       return res.status(404).json({ success: false, message: 'Help request not found' });
     }
-    userToUpdate.helptitle = null;
-    userToUpdate.helpdescription = null;
-    userToUpdate.additional = null;
-    userToUpdate.location = null;
-    userToUpdate.helpstatus = true;
-    userToUpdate.volunteerDetails = {};
-    await userToUpdate.save();
-    res.status(200).json({ success: true, message: 'Help marked as completed' });
+    
+    // Call the markHelpCompleted function with admin privileges
+    const { markHelpCompleted } = await import('../controllers/auth.controller.js');
+    await markHelpCompleted({
+      body: { 
+        email: userToUpdate.email, 
+        isAdmin: true 
+      }
+    }, res);
+    
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error' });
   }

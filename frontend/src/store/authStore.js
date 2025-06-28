@@ -400,10 +400,14 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  markHelpCompleted: async (email) => {
+  markHelpCompleted: async (email, completionCode) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.post(`${API_URL}/mark-help-completed`, { email });
+      const response = await axios.post(`${API_URL}/mark-help-completed`, { 
+        email, 
+        completionCode,
+        isAdmin: false
+      });
       set({ isLoading: false });
       return response.data;
     } catch (error) {

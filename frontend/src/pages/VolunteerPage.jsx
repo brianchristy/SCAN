@@ -68,6 +68,9 @@ const VolunteerPage = () => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionCode, setCompletionCode] = useState('');
+  const [completionError, setCompletionError] = useState('');
   
   // Help categories for filtering
   const helpCategories = [
@@ -221,18 +224,27 @@ const VolunteerPage = () => {
   const handleCompleteRequest = async () => {
     if (!acceptedRequest) return;
     
-    if (!window.confirm('Are you sure you want to mark this request as completed?')) {
+    setShowCompletionModal(true);
+  };
+
+  const handleSubmitCompletion = async () => {
+    if (!completionCode || completionCode.length !== 6) {
+      setCompletionError('Please enter a valid 6-digit code');
       return;
     }
+
+    setCompletionError('');
+    setIsCompleting(true);
     
     try {
-      setIsCompleting(true);
-      // Mark the request as completed and get the updated products list
-      await markHelpCompleted(acceptedRequest.email);
+      // Mark the request as completed with the completion code
+      await markHelpCompleted(acceptedRequest.email, completionCode);
       
       // Clear the accepted request and switch to the available tab
       setAcceptedRequest(null);
       setActiveTab('available');
+      setShowCompletionModal(false);
+      setCompletionCode('');
       
       // Show success message
       toast.success('Request marked as completed!');
@@ -241,7 +253,11 @@ const VolunteerPage = () => {
       await refreshData();
     } catch (error) {
       console.error('Error completing request:', error);
-      toast.error(error.message || 'Failed to complete request');
+      if (error.response?.data?.message) {
+        setCompletionError(error.response.data.message);
+      } else {
+        toast.error(error.message || 'Failed to complete request');
+      }
     } finally {
       setIsCompleting(false);
     }
@@ -559,6 +575,57 @@ const VolunteerPage = () => {
     </div>
   );
 
+  // Completion Modal
+  const renderCompletionModal = () => (
+    <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center ${showCompletionModal ? 'block' : 'hidden'}`}>
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 max-w-md w-full mx-4">
+        <h3 className="text-xl font-bold text-white mb-4">Complete Help Request</h3>
+        <p className="text-gray-300 mb-6">
+          Please enter the 6-digit completion code provided by the citizen to mark this request as completed.
+        </p>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-blue-300 mb-2">
+              Completion Code
+            </label>
+            <input
+              type="text"
+              value={completionCode}
+              onChange={(e) => setCompletionCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="Enter 6-digit code"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+              maxLength={6}
+            />
+            {completionError && (
+              <p className="text-red-400 text-sm mt-2">{completionError}</p>
+            )}
+          </div>
+          
+          <div className="flex space-x-3">
+            <button
+              onClick={() => {
+                setShowCompletionModal(false);
+                setCompletionCode('');
+                setCompletionError('');
+              }}
+              className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmitCompletion}
+              disabled={isCompleting || completionCode.length !== 6}
+              className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+            >
+              {isCompleting ? 'Completing...' : 'Complete'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background with overlay */}
@@ -702,6 +769,8 @@ const VolunteerPage = () => {
           </motion.div>
         </motion.div>
       </main>
+
+      {renderCompletionModal()}
 
       {/* Footer */}
       <footer className="py-6 text-center text-indigo-200 text-sm border-t border-white/10 bg-gradient-to-r from-indigo-900/60 to-purple-900/40 backdrop-blur-md z-20">
