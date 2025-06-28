@@ -472,6 +472,23 @@ export const vhelp = async (req, res) => {
       }
     }
 
+    // Send email to the citizen notifying them that a volunteer has accepted their request
+    try {
+      await sendEmail({
+        to: seniorCitizen.email,
+        subject: 'A Volunteer Has Accepted Your Request',
+        html: `<p>Hello ${seniorCitizen.name || ''},</p>
+          <p>Good news! A volunteer has accepted your help request on SCAN.</p>
+          <p><strong>Volunteer Name:</strong> ${volunteerName}</p>
+          <p><strong>Contact Number:</strong> ${volunteerContact}</p>
+          <p>The volunteer will reach out to you soon. You can also contact them directly if needed.</p>
+          <p><a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log in to your SCAN account</a> to view your request status and more details.</p>
+          <p>Thank you for using SCAN!</p>`
+      });
+    } catch (emailError) {
+      console.error('Failed to send acceptance email to citizen:', emailError);
+    }
+
     // Return the updated senior citizen data
     res.status(200).json({
       success: true,

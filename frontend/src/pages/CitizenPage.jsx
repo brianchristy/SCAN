@@ -26,6 +26,7 @@ import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import seniorBackground from '../assets/seniordashboard.jpeg';
+import { formatDate } from '../utils/date';
 
 // Animation variants
 const containerVariants = {
@@ -61,6 +62,21 @@ const locations = [
   'Kottayam', 'Idukki', 'Ernakulam', 'Thrissur', 'Palakkad',
   'Malappuram', 'Kozhikode', 'Wayanad', 'Kannur', 'Kasaragod'
 ];
+
+// Utility: check if cancel is allowed (at least 2 hours before requested time)
+function isCancelAllowed(helpdate, helptime) {
+  if (!helpdate || !helptime) return true;
+  try {
+    // helpdate: 'YYYY-MM-DD', helptime: 'HH:MM'
+    const [year, month, day] = helpdate.split('-').map(Number);
+    const [hour, minute] = helptime.split(':').map(Number);
+    const requestDate = new Date(year, month - 1, day, hour, minute);
+    const cutoff = new Date(requestDate.getTime() - 2 * 60 * 60 * 1000); // minus 2 hours
+    return new Date() < cutoff;
+  } catch {
+    return true;
+  }
+}
 
 const CitizenPage = () => {
   // Form state
@@ -726,9 +742,11 @@ const CitizenPage = () => {
                     <div className="flex space-x-3">
                       <motion.button
                         onClick={handleCancelHelp}
-                        className="flex-1 flex items-center justify-center px-4 py-3 bg-red-600/20 border border-red-500/30 rounded-lg text-red-300 hover:bg-red-600/30 transition-colors"
+                        className={`flex-1 flex items-center justify-center px-4 py-3 bg-red-600/20 border border-red-500/30 rounded-lg text-red-300 hover:bg-red-600/30 transition-colors ${!isCancelAllowed(formData.helpdate, formData.helptime) ? 'cursor-not-allowed' : ''}`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
+                        disabled={!isCancelAllowed(formData.helpdate, formData.helptime)}
+                        title={!isCancelAllowed(formData.helpdate, formData.helptime) ? 'Cancellation is only allowed up to 2 hours before the requested time.' : ''}
                       >
                         <X className="h-5 w-5 mr-2" />
                         Cancel Request
