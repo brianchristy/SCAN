@@ -779,7 +779,7 @@ const CitizenPage = () => {
                         </div>
                         <div className="ml-4">
                           <h3 className="text-lg font-semibold text-yellow-400 mb-1">Waiting for Volunteer</h3>
-                          <p className="text-yellow-300">We're looking for an available volunteer to assist you. This may take a few minutes.</p>
+                          <p className="text-yellow-300">We're looking for an available volunteer to assist you. This may take some time. We will notify you when a volunteer is found.</p>
                         </div>
                       </div>
                     </div>
