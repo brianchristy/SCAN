@@ -8,6 +8,7 @@ import { connectDB } from "./db/connectDB.js";
 
 import authRoutes from "./routes/auth.route.js";
 import adminRoutes from "./routes/admin.route.js";
+import { checkExpiredHelpRequests } from './controllers/auth.controller.js';
 
 dotenv.config();
 
@@ -36,6 +37,15 @@ if (process.env.NODE_ENV === "production") {
 		res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
 	});
 }
+
+// Schedule job to check for expired help requests every 5 minutes
+setInterval(async () => {
+	console.log('Checking for expired help requests...');
+	await checkExpiredHelpRequests();
+}, 5 * 60 * 1000); // 5 minutes
+
+// Also run once on server startup
+checkExpiredHelpRequests();
 
 app.listen(PORT, () => {
 	connectDB();

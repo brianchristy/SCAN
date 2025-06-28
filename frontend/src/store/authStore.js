@@ -16,9 +16,25 @@ const API_URL =
 
 axios.defaults.withCredentials = true;
 
+// Load persisted auth state from localStorage
+function getInitialAuthState() {
+  let user = null;
+  let isAuthenticated = false;
+  try {
+    const userStr = localStorage.getItem('scanUser');
+    if (userStr) {
+      user = JSON.parse(userStr);
+      isAuthenticated = true;
+    }
+  } catch {}
+  return { user, isAuthenticated };
+}
+
+const initialAuth = getInitialAuthState();
+
 export const useAuthStore = create((set, get) => ({
-  user: null,
-  isAuthenticated: false,
+  user: initialAuth.user,
+  isAuthenticated: initialAuth.isAuthenticated,
   error: null,
   isLoading: false,
   isCheckingAuth: false,
@@ -100,6 +116,7 @@ export const useAuthStore = create((set, get) => ({
 
       // Remove the token and clear user state
       localStorage.removeItem("userToken"); // Clear token from localStorage
+      localStorage.removeItem('scanUser'); // Remove persisted user
       set({
         user: null,
         isAuthenticated: false,
@@ -132,6 +149,8 @@ export const useAuthStore = create((set, get) => ({
         error: null,
         isLoading: false,
       });
+      // Persist to localStorage
+      localStorage.setItem('scanUser', JSON.stringify(response.data.user));
 
       // Initialize session manager after successful login
       sessionManager.init();
@@ -225,6 +244,8 @@ export const useAuthStore = create((set, get) => ({
         isCheckingAuth: false,
         error: null,
       });
+      // Persist to localStorage
+      localStorage.setItem('scanUser', JSON.stringify(response.data.user));
 
       // Initialize session manager if not already done
       if (!sessionManager.isInitialized) {
@@ -251,6 +272,9 @@ export const useAuthStore = create((set, get) => ({
         // Handle account termination
         sessionManager.handleAccountTermination();
         
+        // Remove from localStorage
+        localStorage.removeItem('scanUser');
+        
         return null;
       }
 
@@ -259,6 +283,8 @@ export const useAuthStore = create((set, get) => ({
         const message = error.response?.data?.message;
         if (message?.includes('inactivity') || message?.includes('expired') || message?.includes('Invalid session')) {
           sessionManager.handleInactivity();
+          // Remove from localStorage
+          localStorage.removeItem('scanUser');
           return null;
         }
       }
@@ -266,6 +292,8 @@ export const useAuthStore = create((set, get) => ({
       // Handle internal errors
       if (error.response?.status >= 500) {
         sessionManager.handleInternalError();
+        // Remove from localStorage
+        localStorage.removeItem('scanUser');
         return null;
       }
       
@@ -275,6 +303,8 @@ export const useAuthStore = create((set, get) => ({
         isCheckingAuth: false,
         error: error.response?.data?.message || 'Authentication check failed',
       });
+      // Remove from localStorage
+      localStorage.removeItem('scanUser');
       return null;
     }
   },

@@ -412,8 +412,9 @@ export const help = async (req, res) => {
 export const getProducts = async (req, res) => {
   try {
     const userId = req.userId;
+    const now = new Date();
 
-    // Query 1: Get all unaccepted help requests
+    // Query 1: Get all unaccepted help requests that are not expired
     const availableRequestsQuery = { 
       category: "Citizen",
       helptitle: { $exists: true, $ne: "" },
@@ -424,15 +425,28 @@ export const getProducts = async (req, res) => {
       ]
     };
     
+    let availableRequests = await User.find(availableRequestsQuery)
+      .select('-password -verificationToken -verificationTokenExpiresAt');
+
+    // Filter out requests whose requested time is in the past
+    availableRequests = availableRequests.filter(req => {
+      if (!req.helpdate || !req.helptime) return false;
+      try {
+        const [year, month, day] = req.helpdate.split('-').map(Number);
+        const [hour, minute] = req.helptime.split(':').map(Number);
+        const requestDate = new Date(year, month - 1, day, hour, minute);
+        return requestDate >= now;
+      } catch {
+        return false;
+      }
+    });
+    
     // Query 2: Get the specific request accepted by the current volunteer
     const myAcceptedRequestQuery = {
       'volunteerDetails.volunteerId': new mongoose.Types.ObjectId(userId),
       'volunteerDetails.isAccepted': true
     };
 
-    const availableRequests = await User.find(availableRequestsQuery)
-      .select('-password -verificationToken -verificationTokenExpiresAt');
-    
     const myAcceptedRequest = await User.find(myAcceptedRequestQuery)
       .select('-password -verificationToken -verificationTokenExpiresAt');
 
@@ -631,5 +645,77 @@ export const refreshToken = async (req, res) => {
   } catch (error) {
     console.error('Token refresh error:', error);
     res.status(401).json({ success: false, message: 'Invalid refresh token' });
+  }
+};
+
+export const checkExpiredHelpRequests = async () => {
+  try {
+    const now = new Date();
+    
+    // Find all active help requests that have expired (past their requested time)
+    const expiredRequests = await User.find({
+      category: 'Citizen',
+      helptitle: { $exists: true, $ne: null },
+      helpstatus: false, // Active requests
+      $or: [
+        { 'volunteerDetails': { $exists: false } },
+        { 'volunteerDetails': null },
+        { 'volunteerDetails.isAccepted': { $ne: true } }
+      ]
+    });
+
+    for (const request of expiredRequests) {
+      if (request.helpdate && request.helptime) {
+        try {
+          // Parse the requested date and time
+          const [year, month, day] = request.helpdate.split('-').map(Number);
+          const [hour, minute] = request.helptime.split(':').map(Number);
+          const requestDateTime = new Date(year, month - 1, day, hour, minute);
+          
+          // Check if the request time has passed
+          if (requestDateTime < now) {
+            // Send email notification to citizen
+            try {
+              await sendEmail({
+                to: request.email,
+                subject: 'No Volunteers Available for Your Help Request',
+                html: `<p>Hello ${request.name || ''},</p>
+                  <p>We regret to inform you that no volunteers were available to accept your help request for <strong>${request.helptitle}</strong> scheduled for ${request.helpdate} at ${request.helptime}.</p>
+                  <p>Your request has now expired. You can submit a new help request if you still need assistance.</p>
+                  <p><strong>Request Details:</strong></p>
+                  <ul>
+                    <li>Type of Help: ${request.helptitle}</li>
+                    <li>Description: ${request.helpdescription}</li>
+                    <li>Location: ${request.location}</li>
+                    <li>Date: ${request.helpdate}</li>
+                    <li>Time: ${request.helptime}</li>
+                  </ul>
+                  <p><a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log in to your SCAN account</a> to submit a new request.</p>
+                  <p>Thank you for using SCAN!</p>`
+              });
+            } catch (emailError) {
+              console.error('Failed to send expiration email to citizen:', emailError);
+            }
+
+            // Clear the expired request
+            request.helptitle = null;
+            request.helpdescription = null;
+            request.additional = null;
+            request.location = null;
+            request.helpdate = null;
+            request.helptime = null;
+            request.helpstatus = true;
+            request.volunteerDetails = {};
+            
+            await request.save();
+            console.log(`Expired help request cleared for user: ${request.email}`);
+          }
+        } catch (parseError) {
+          console.error('Error parsing date/time for request:', parseError);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error checking expired help requests:', error);
   }
 };

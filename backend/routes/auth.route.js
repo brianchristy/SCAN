@@ -14,6 +14,7 @@ import {
   markHelpCompleted,
   getMe,
   refreshToken,
+  checkExpiredHelpRequests
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
@@ -49,5 +50,15 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
 router.get('/me', verifyToken, getMe);
+
+// Route to manually check expired help requests (for testing/admin)
+router.post("/check-expired-requests", verifyToken, async (req, res) => {
+  try {
+    await checkExpiredHelpRequests();
+    res.status(200).json({ success: true, message: "Expired requests check completed" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error checking expired requests" });
+  }
+});
 
 export default router;

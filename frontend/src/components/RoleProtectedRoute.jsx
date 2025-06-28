@@ -13,8 +13,10 @@ export const RoleProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, isCheckingAuth, checkAuth } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
-    // Only runs when the component mounts
+    // Only check auth if we don't have a user yet
+    if (!user) {
+      checkAuth();
+    }
     // eslint-disable-next-line
   }, []);
 
