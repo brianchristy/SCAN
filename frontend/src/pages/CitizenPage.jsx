@@ -140,13 +140,12 @@ const CitizenPage = () => {
     }
   }, [hasActiveRequest, user]);
 
-  // Polling: refresh user/request status every 10 seconds if waiting for volunteer or if volunteer is assigned
+  // Polling: refresh user/request status every 10 seconds if waiting for volunteer (not after volunteer is assigned)
   useEffect(() => {
-    if (hasActiveRequest) {
+    if (hasActiveRequest && !(user?.volunteerDetails && user.volunteerDetails.isAccepted)) {
       intervalRef.current = setInterval(async () => {
         const previousUser = user;
         await checkAuth();
-        
         // Check if help was completed (user had volunteerDetails before but now doesn't)
         if (previousUser?.volunteerDetails?.name && !user?.volunteerDetails?.name && user?.helpstatus === true) {
           toast.success('Your help request has been marked as completed by the volunteer!');
@@ -154,7 +153,7 @@ const CitizenPage = () => {
       }, 10000);
     }
     return () => clearInterval(intervalRef.current);
-  }, [hasActiveRequest, user?.volunteerDetails?.name, checkAuth]);
+  }, [hasActiveRequest, user?.volunteerDetails?.isAccepted, checkAuth]);
 
   // Handle form input changes
   const handleChange = (e) => {

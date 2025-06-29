@@ -2,6 +2,11 @@ import bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 import { generateTokenAndSetCookie, clearUserSession } from "../utils/generateTokenAndSetCookie.js";
 import { User } from "../models/user.model.js";
@@ -347,6 +352,21 @@ export const help = async (req, res) => {
       user.helpstatus = false; // Active request
       user.volunteerDetails = null; // Clear any previous volunteer details
     } else if (action === "cancel") {
+      // Only enforce 2-hour rule if a volunteer is assigned and accepted
+      if (user.volunteerDetails && user.volunteerDetails.isAccepted) {
+        if (user.helpdate && user.helptime) {
+          try {
+            const requestDate = dayjs.tz(`${user.helpdate} ${user.helptime}`, 'YYYY-MM-DD HH:mm', 'Asia/Kolkata');
+            const cutoff = requestDate.subtract(2, 'hour');
+            const now = dayjs().tz('Asia/Kolkata');
+            if (now.isAfter(cutoff)) {
+              return res.status(400).json({ message: "You can only cancel the request up to 2 hours before the requested time after a volunteer is assigned." });
+            }
+          } catch {
+            // If parsing fails, allow cancel
+          }
+        }
+      }
       // Cancel help request
       user.helptitle = null;
       user.helpdescription = null;
@@ -683,15 +703,13 @@ export const checkExpiredHelpRequests = async () => {
     for (const request of expiredRequests) {
       if (request.helpdate && request.helptime) {
         try {
-          // Parse the requested date and time as IST (local time, no UTC conversion)
-          const [year, month, day] = request.helpdate.split('-').map(Number);
-          const [hour, minute] = request.helptime.split(':').map(Number);
-          const requestDateTimeIST = new Date(year, month - 1, day, hour, minute);
+          const requestDateTimeIST = dayjs.tz(`${request.helpdate} ${request.helptime}`, 'YYYY-MM-DD HH:mm', 'Asia/Kolkata');
+          const nowIST = dayjs().tz('Asia/Kolkata');
           // Log the details for debugging
-          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTimeIST(local)=${requestDateTimeIST.toString()}, nowIST=${nowIST.toString()}`);
+          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTimeIST(dayjs)=${requestDateTimeIST.format()}, nowIST=${nowIST.format()}`);
           // Check if the request has expired (past the requested time in IST)
-          if (nowIST > requestDateTimeIST) {
-            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTimeIST.toString()} IST)`);
+          if (nowIST.isAfter(requestDateTimeIST)) {
+            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTimeIST.format()} IST)`);
             // Send email notification to citizen
             const emailHtml = `
               <h2>Help Request Expired</h2>
