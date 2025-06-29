@@ -658,10 +658,16 @@ export const refreshToken = async (req, res) => {
   }
 };
 
+// Helper to convert a Date object to IST (UTC+5:30)
+function toIST(date) {
+  return new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+}
+
 export const checkExpiredHelpRequests = async () => {
   try {
-    const now = new Date();
-    console.log('[CRON] Running checkExpiredHelpRequests at', now.toISOString());
+    const nowUTC = new Date();
+    const nowIST = toIST(nowUTC);
+    console.log('[CRON] Running checkExpiredHelpRequests at (UTC)', nowUTC.toISOString(), '| (IST)', nowIST.toISOString());
     // Find all active help requests that have expired (past their requested time)
     const expiredRequests = await User.find({
       category: 'Citizen',
@@ -677,15 +683,16 @@ export const checkExpiredHelpRequests = async () => {
     for (const request of expiredRequests) {
       if (request.helpdate && request.helptime) {
         try {
-          // Parse the requested date and time
+          // Parse the requested date and time as UTC, treat as IST
           const [year, month, day] = request.helpdate.split('-').map(Number);
           const [hour, minute] = request.helptime.split(':').map(Number);
-          const requestDateTime = new Date(year, month - 1, day, hour, minute);
+          const requestDateTimeUTC = new Date(Date.UTC(year, month - 1, day, hour, minute));
+          const requestDateTimeIST = toIST(requestDateTimeUTC);
           // Log the details for debugging
-          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTime=${requestDateTime.toISOString()}, now=${now.toISOString()}`);
-          // Check if the request has expired (past the requested time)
-          if (now > requestDateTime) {
-            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTime.toISOString()})`);
+          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTimeIST=${requestDateTimeIST.toISOString()}, nowIST=${nowIST.toISOString()}`);
+          // Check if the request has expired (past the requested time in IST)
+          if (nowIST > requestDateTimeIST) {
+            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTimeIST.toISOString()} IST)`);
             // Send email notification to citizen
             const emailHtml = `
               <h2>Help Request Expired</h2>
