@@ -661,7 +661,7 @@ export const refreshToken = async (req, res) => {
 export const checkExpiredHelpRequests = async () => {
   try {
     const now = new Date();
-    
+    console.log('[CRON] Running checkExpiredHelpRequests at', now.toISOString());
     // Find all active help requests that have expired (past their requested time)
     const expiredRequests = await User.find({
       category: 'Citizen',
@@ -673,7 +673,7 @@ export const checkExpiredHelpRequests = async () => {
         { 'volunteerDetails.isAccepted': { $ne: true } }
       ]
     });
-
+    console.log(`[CRON] Found ${expiredRequests.length} potentially expired requests`);
     for (const request of expiredRequests) {
       if (request.helpdate && request.helptime) {
         try {
@@ -681,14 +681,13 @@ export const checkExpiredHelpRequests = async () => {
           const [year, month, day] = request.helpdate.split('-').map(Number);
           const [hour, minute] = request.helptime.split(':').map(Number);
           const requestDateTime = new Date(year, month - 1, day, hour, minute);
-          
           // Check if the request has expired (past the requested time)
           if (now > requestDateTime) {
+            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTime.toISOString()})`);
             // Send email notification to citizen
             const emailHtml = `
               <h2>Help Request Expired</h2>
               <p>Your help request has expired without being accepted by a volunteer.</p>
-              
               <h3>Request Details:</h3>
               <ul>
                 <li><strong>Help Type:</strong> ${request.helptitle}</li>
@@ -696,18 +695,14 @@ export const checkExpiredHelpRequests = async () => {
                 <li><strong>Time:</strong> ${request.helptime}</li>
                 <li><strong>Location:</strong> ${request.location}</li>
               </ul>
-              
               <p>You can create a new help request at any time: <a href="${process.env.FRONTEND_URL}/login">Login to SCAN</a></p>
-              
               <p>Thank you for using SCAN!</p>
             `;
-
             await sendEmail({
               to: request.email,
               subject: "Help Request Expired - SCAN",
               html: emailHtml,
             });
-
             // Clear the expired request
             request.helptitle = null;
             request.helpdescription = null;
@@ -718,13 +713,15 @@ export const checkExpiredHelpRequests = async () => {
             request.helpstatus = null;
             request.volunteerDetails = null;
             await request.save();
+            console.log(`[CRON] Cleared expired request for user ${request.email}`);
           }
         } catch (parseError) {
-          // Handle date parsing errors silently
+          console.error('[CRON] Error parsing date or clearing request for', request.email, parseError);
         }
       }
     }
+    console.log('[CRON] checkExpiredHelpRequests finished');
   } catch (error) {
-    // Handle any errors silently
+    console.error('[CRON] Error in checkExpiredHelpRequests:', error);
   }
 };
