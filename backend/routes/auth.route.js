@@ -71,4 +71,32 @@ router.post("/check-expired-requests-public", async (req, res) => {
   }
 });
 
+// Cron job endpoint to keep server awake and check expired requests
+router.get("/cron/check-expired", async (req, res) => {
+  try {
+    await checkExpiredHelpRequests();
+    res.status(200).json({ 
+      success: true, 
+      message: "Cron job executed successfully",
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Cron job error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error in cron job",
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Health check endpoint for cron services
+router.get("/health", async (req, res) => {
+  res.status(200).json({ 
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    service: "SCAN Backend"
+  });
+});
+
 export default router;
