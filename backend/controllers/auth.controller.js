@@ -2,6 +2,7 @@ import bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import moment from 'moment-timezone';
 
 import { generateTokenAndSetCookie, clearUserSession } from "../utils/generateTokenAndSetCookie.js";
 import { User } from "../models/user.model.js";
@@ -683,16 +684,13 @@ export const checkExpiredHelpRequests = async () => {
     for (const request of expiredRequests) {
       if (request.helpdate && request.helptime) {
         try {
-          // Parse the requested date and time as UTC, treat as IST
-          const [year, month, day] = request.helpdate.split('-').map(Number);
-          const [hour, minute] = request.helptime.split(':').map(Number);
-          const requestDateTimeUTC = new Date(Date.UTC(year, month - 1, day, hour, minute));
-          const requestDateTimeIST = toIST(requestDateTimeUTC);
+          // Parse the requested date and time as IST (Asia/Kolkata)
+          const requestDateTimeIST = moment.tz(`${request.helpdate} ${request.helptime}`, 'YYYY-MM-DD HH:mm', 'Asia/Kolkata').toDate();
           // Log the details for debugging
-          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTimeIST=${requestDateTimeIST.toISOString()}, nowIST=${nowIST.toISOString()}`);
+          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTimeIST=${requestDateTimeIST.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })}, nowIST=${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })}`);
           // Check if the request has expired (past the requested time in IST)
-          if (nowIST > requestDateTimeIST) {
-            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTimeIST.toISOString()} IST)`);
+          if (new Date() > requestDateTimeIST) {
+            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTimeIST.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })} IST)`);
             // Send email notification to citizen
             const emailHtml = `
               <h2>Help Request Expired</h2>
