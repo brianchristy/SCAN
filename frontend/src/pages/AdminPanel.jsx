@@ -62,7 +62,7 @@ const AdminPanel = () => {
   const fetchPendingVolunteers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/volunteers/pending', { 
+      const res = await fetch('/api/admin/volunteers/pending', {
         headers: getAuthHeaders()
       });
       const data = await res.json();

@@ -308,7 +308,7 @@ export const useAuthStore = create((set, get) => ({
           }
         }
       }
-
+      
       // Handle banned user case
       if (error.response?.status === 403 && error.response?.data?.isBanned) {
         // Clear user data and tokens
