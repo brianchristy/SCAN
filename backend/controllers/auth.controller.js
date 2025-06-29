@@ -681,6 +681,8 @@ export const checkExpiredHelpRequests = async () => {
           const [year, month, day] = request.helpdate.split('-').map(Number);
           const [hour, minute] = request.helptime.split(':').map(Number);
           const requestDateTime = new Date(year, month - 1, day, hour, minute);
+          // Log the details for debugging
+          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTime=${requestDateTime.toISOString()}, now=${now.toISOString()}`);
           // Check if the request has expired (past the requested time)
           if (now > requestDateTime) {
             console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTime.toISOString()})`);
