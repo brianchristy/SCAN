@@ -1,115 +1,220 @@
-# **Senior Citizen Assistance Network**
+# **SCAN - Senior Citizen Assistance Network**
 
 ## **Overview**
-The Volunteer Assistance Network is a platform designed to connect senior citizens and caregivers with volunteers willing to offer assistance in various areas, such as companionship, housekeeping, gardening, and more. The goal is to create a supportive community that enhances the quality of life for all its members.
+SCAN (Senior Citizen Assistance Network) is a comprehensive platform designed to connect senior citizens with volunteers willing to offer assistance in various areas such as companionship, housekeeping, gardening, medical assistance, and more. The platform creates a supportive community that enhances the quality of life for senior citizens while providing meaningful opportunities for volunteers.
 
 ---
 
-## **Features**
-- **User Authentication:** Secure login and registration with email verification.
-- **Role-Based Access:** Dedicated dashboards for seniors, caregivers, volunteers, and admins.
-- **Profile Management:** Users can update their profiles with personal details and preferences.
-- **Request Submission:** Seniors and caregivers can submit requests for assistance.
-- **Task Management:** Volunteers can view and manage tasks based on their skills.
-- **Admin Dashboard:** Admins can monitor user activities and manage the platform.
-- **Interactive UI:** A responsive and user-friendly interface for all users.
+## **Key Features**
+
+### **For Citizens (Senior Citizens)**
+- **Secure Registration & Login:** Email verification and JWT-based authentication
+- **Help Request Management:** Create, view, and cancel help requests
+- **Real-time Notifications:** Email notifications for request acceptance and completion
+- **Completion Code System:** 6-digit verification code for request completion
+- **Request Scheduling:** Schedule requests at least 3 hours in advance
+- **Profile Management:** Update personal information and preferences
+
+### **For Volunteers**
+- **Volunteer Registration:** Apply to become a volunteer with admin approval
+- **Request Browsing:** View available help requests in their area
+- **Request Acceptance:** Accept and manage assigned requests
+- **Completion Verification:** Enter completion codes to mark requests as done
+- **Profile Management:** Update skills, availability, and personal information
+
+### **For Administrators**
+- **User Management:** Approve/reject volunteer applications, manage user accounts
+- **Request Oversight:** Monitor all help requests and their status
+- **System Management:** Override completion codes, cancel requests, manage platform
+- **Analytics Dashboard:** View platform statistics and user activities
+
+---
+
+## **Application Workflow**
+
+### **1. User Registration & Authentication**
+```
+Citizen/Volunteer Registration → Email Verification → Login → Role-based Dashboard
+```
+
+### **2. Help Request Lifecycle**
+```
+Citizen Creates Request → 3+ Hours Advance Scheduling → Request Available to Volunteers → 
+Volunteer Accepts → Email Notification to Citizen → 6-digit Code Generated → 
+Request Execution → Code Verification → Request Completion
+```
+
+### **3. Volunteer Application Process**
+```
+Volunteer Registration → Admin Review → Approval/Rejection → Email Notification → 
+Access to Volunteer Dashboard
+```
+
+### **4. Request Management Rules**
+- **Scheduling:** Requests must be scheduled at least 3 hours in advance
+- **Cancellation:** Citizens can cancel requests up to 2 hours before scheduled time
+- **Expiration:** Unaccepted requests automatically expire after scheduled time
+- **Completion:** Requires 6-digit verification code (bypassed for admins)
+
+### **5. Automated Processes**
+- **Email Notifications:** Request acceptance, completion, expiration
+- **Request Cleanup:** Expired requests automatically cleared with email notifications
+- **Session Management:** Persistent authentication with localStorage
 
 ---
 
 ## **Technologies Used**
-- **Frontend:** React, Tailwind CSS  
-- **Backend:** Node.js, Express.js  
-- **Database:** MongoDB  
-- **State Management:** Zustand (authStore)  
-- **Authentication:** JWT (JSON Web Token)  
-- **Environment:** Node.js, Postman (for API testing)  
+
+### **Frontend**
+- **React 18** with Vite for fast development
+- **Tailwind CSS** for responsive design
+- **Zustand** for state management
+- **React Router DOM** for navigation
+- **Axios** for API communication
+- **React Hot Toast** for notifications
+- **Framer Motion** for animations
+- **Lucide React** for icons
+
+### **Backend**
+- **Node.js** with Express.js
+- **MongoDB** with Mongoose ODM
+- **JWT** for authentication
+- **Nodemailer** for email services
+- **Day.js** for date/time handling
+- **Bcryptjs** for password hashing
+- **CORS** for cross-origin requests
+
+### **Development Tools**
+- **ESLint** for code linting
+- **Nodemon** for development server
+- **Cross-env** for environment variables
+- **PostCSS** and **Autoprefixer** for CSS processing
 
 ---
 
 ## **Setup Instructions**
 
 ### **Prerequisites**
-Ensure you have the following installed:
-- Node.js
-- MongoDB
+- Node.js (v16 or higher)
+- MongoDB (local or cloud instance)
 - Git
 
-### **Steps to Run the Project**
+### **Installation Steps**
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/yourusername/volunteer-assistance-network.git
-   cd volunteer-assistance-network
+   git clone https://github.com/brianchristy/SCAN.git
+   cd SCAN
    ```
-   
+
 2. **Install Dependencies:**
+   ```bash
+   # Install backend dependencies
+   cd backend
+   npm install
    
-    • For the backend:
-      ```bash
-      cd backend
-      npm install
-      ```
-      
-    • For the frontend:
-      ```bash
-      cd frontend
-      npm install
-      ```
-   
-4. **Setup Environment Variables:**
-   
-    • In the backend folder, create a .env file and add the following:
-   
-      ```env
-      MONGO_URI=your-mongodb-uri
-      JWT_SECRET=your-jwt-secret
-      EMAIL_USER=your-email-user
-      EMAIL_PASS=your-email-password
-      ```
-      
-    • Replace the placeholders with your actual values.
-
-
-4. **Run the Application:**
-   
-    • Start the backend:
-      ```bash
-      cd backend
-      npm start
-      ```
-   • Start the frontend:
-      ```bash
-      cd frontend
-      npm run dev
-      ```
-
-5. **Access the Application: Open your browser and navigate to:**
-   
-   ```arduino
-   http://localhost:3000
+   # Install frontend dependencies
+   cd frontend
+   npm install
    ```
+
+3. **Environment Configuration:**
+   
+   Create `.env` file in the backend directory:
+   ```env
+   MONGO_URI=your-mongodb-connection-string
+   JWT_SECRET=your-jwt-secret-key
+   EMAIL_USER=your-email-address
+   EMAIL_PASS=your-email-app-password
+   FRONTEND_URL=http://localhost:5173
+   PORT=5000
+   ```
+
+4. **Start the Application:**
+   ```bash
+   # Start backend server
+   cd backend
+   node index.js
+   
+   # In a new terminal, start frontend
+   cd frontend
+   npm run dev
+   ```
+
+5. **Access the Application:**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:5000
+
+### **Live Demo**
+- **Hosted Application:** [https://scan-app.onrender.com](https://scan-app.onrender.com)
+- **Frontend Repository:** [https://github.com/brianchristy/SCAN/tree/master/frontend](https://github.com/brianchristy/SCAN/tree/master/frontend)
 
 ---
 
 ## **Project Structure**
 
-### **Backend**
-- **Controllers:** Handles business logic.
-- **Routes:** Defines API endpoints.
-- **Models:** MongoDB schemas for users, requests, etc.
-- **Middleware:** Authentication and request validation.
-- **Utilities:** Helper functions like email verification.
+```
+SCAN/
+├── backend/
+│   ├── controllers/     # Business logic handlers
+│   ├── db/             # Database connection
+│   ├── middleware/     # Authentication & validation
+│   ├── models/         # MongoDB schemas
+│   ├── routes/         # API endpoints
+│   ├── utils/          # Helper functions
+│   └── index.js        # Server entry point
+├── frontend/
+│   ├── src/
+│   │   ├── components/ # Reusable UI components
+│   │   ├── pages/      # Application pages
+│   │   ├── store/      # Zustand state management
+│   │   └── utils/      # Frontend utilities
+│   ├── public/         # Static assets
+│   └── package.json
+└── README.md
+```
 
-### **Frontend**
-- **Pages:** Individual pages like Login, Dashboard, Profile, etc.
-- **Components:** Reusable UI components.
-- **Store:** Zustand state management for authentication and profile updates.
+---
+
+## **API Endpoints**
+
+### **Authentication**
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/refresh` - Refresh JWT token
+
+### **Help Requests**
+- `POST /api/auth/help` - Create help request
+- `POST /api/auth/vhelp` - Accept help request (volunteer)
+- `POST /api/auth/mark-completed` - Mark request as completed
+- `GET /api/auth/products` - Get available requests (volunteer)
+
+### **User Management**
+- `PUT /api/auth/update-profile` - Update user profile
+- `POST /api/auth/forgot-password` - Password reset request
+- `POST /api/auth/reset-password` - Reset password
+
+---
+
+## **Security Features**
+- JWT-based authentication with refresh tokens
+- Password hashing with bcrypt
+- Email verification for new accounts
+- Role-based access control
+- CORS protection
+- Input validation and sanitization
 
 ---
 
 ## **Contributing**
 
-Contributions are welcome! Please fork the repository and submit a pull request with your changes.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
@@ -121,8 +226,6 @@ This project is licensed under the MIT License. See the [LICENSE](https://choose
 
 ## **Contact**
 
-For any queries or suggestions, feel free to reach out:
-
-- **Project Owner:** [brianchristy](https://github.com/brianchristy)  
-- **Email:** brianchristopher170804@gmail.com  
+- **Project Owner:** [brianchristy](https://github.com/brianchristy)
+- **Email:** brianchristopher170804@gmail.com
 - **GitHub Repository:** [SCAN Project](https://github.com/brianchristy/SCAN)

@@ -687,7 +687,6 @@ export const checkExpiredHelpRequests = async () => {
   try {
     const nowUTC = new Date();
     const nowIST = toIST(nowUTC);
-    console.log('[CRON] Running checkExpiredHelpRequests at (UTC)', nowUTC.toISOString(), '| (IST)', nowIST.toISOString());
     // Find all active help requests that have expired (past their requested time)
     const expiredRequests = await User.find({
       category: 'Citizen',
@@ -699,17 +698,13 @@ export const checkExpiredHelpRequests = async () => {
         { 'volunteerDetails.isAccepted': { $ne: true } }
       ]
     });
-    console.log(`[CRON] Found ${expiredRequests.length} potentially expired requests`);
     for (const request of expiredRequests) {
       if (request.helpdate && request.helptime) {
         try {
           const requestDateTimeIST = dayjs.tz(`${request.helpdate} ${request.helptime}`, 'YYYY-MM-DD HH:mm', 'Asia/Kolkata');
           const nowIST = dayjs().tz('Asia/Kolkata');
-          // Log the details for debugging
-          console.log(`[CRON] Checking request for ${request.email}: helpdate=${request.helpdate}, helptime=${request.helptime}, requestDateTimeIST(dayjs)=${requestDateTimeIST.format()}, nowIST=${nowIST.format()}`);
           // Check if the request has expired (past the requested time in IST)
           if (nowIST.isAfter(requestDateTimeIST)) {
-            console.log(`[CRON] Expiring request for user ${request.email} (requested for ${requestDateTimeIST.format()} IST)`);
             // Send email notification to citizen
             const emailHtml = `
               <h2>Help Request Expired</h2>
@@ -739,14 +734,12 @@ export const checkExpiredHelpRequests = async () => {
             request.helpstatus = null;
             request.volunteerDetails = null;
             await request.save();
-            console.log(`[CRON] Cleared expired request for user ${request.email}`);
           }
         } catch (parseError) {
           console.error('[CRON] Error parsing date or clearing request for', request.email, parseError);
         }
       }
     }
-    console.log('[CRON] checkExpiredHelpRequests finished');
   } catch (error) {
     console.error('[CRON] Error in checkExpiredHelpRequests:', error);
   }
