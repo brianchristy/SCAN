@@ -41,7 +41,7 @@ export const approveVolunteer = async (req, res) => {
              <p>Your volunteer account for SCAN has been approved by an administrator.</p>
              <p>You can now log in to your account and start helping.</p>
              <p>
-               <a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline; >Log In to SCAN</a>
+               <a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log In to SCAN</a>
              </p>
              <p>Thank you for joining our community!</p>`
     });
@@ -71,10 +71,9 @@ export const rejectVolunteer = async (req, res) => {
     // Send account termination email
     await sendEmail({
       to: volunteer.email,
-      subject: 'Your SCAN Account Has Been Terminated',
+      subject: 'Your Volunteer Account Request Has Been Rejected',
       html: `<p>Hello ${volunteer.name},</p>
-             <p>Your account on SCAN has been terminated by an administrator.</p>
-             <p>If you would like to use our services again, you will need to sign up for a new account.</p>
+             <p>Your volunteer account request on SCAN has been rejected by an administrator.</p>
              <p>If you believe this was a mistake, please contact support at scanserviceandhelp@gmail.com</p>
              <p>Thank you for your understanding.</p>`
     });
@@ -263,6 +262,9 @@ export const unbanUser = async (req, res) => {
       subject: 'Your SCAN Account Has Been Restored',
       html: `<p>Hello ${userToUnban.name},</p>
              <p>Your account on SCAN has been restored by an administrator. You can now log in and use the platform again.</p>
+             <p>
+               <a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log In to SCAN</a>
+             </p>
              <p>Thank you for your patience.</p>`
     });
 

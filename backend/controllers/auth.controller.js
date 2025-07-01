@@ -55,7 +55,7 @@ export const signup = async (req, res) => {
         subject: 'Verify your email for SCAN',
         html: `<p>Hello ${user.name || ''},</p>
           <p>Thank you for signing up for SCAN. Please verify your email by clicking the link below:</p>
-          <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+          <p><a href="${verifyUrl}">Click on this link to verify your email.</a></p>
           <p>If you did not sign up, you can ignore this email.</p>`
       });
       res.status(201).json({
@@ -84,7 +84,7 @@ export const signup = async (req, res) => {
         subject: 'Verify your email for SCAN',
         html: `<p>Hello ${user.name || ''},</p>
           <p>Thank you for signing up as a volunteer for SCAN. Please verify your email by clicking the link below:</p>
-          <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+          <p><a href="${verifyUrl}">Click on this link to verify your email.</a></p>
           <p>If you did not sign up, you can ignore this email.</p>`
       });
       res.status(201).json({
@@ -485,7 +485,7 @@ export const vhelp = async (req, res) => {
     // Update the help request with volunteer details
     seniorCitizen.volunteerDetails = {
       name: volunteerName,
-      contact: volunteerContact,
+      contactno: volunteerContact,
       volunteerId: volunteerId,
       isAccepted: true,
       acceptedAt: new Date(),
