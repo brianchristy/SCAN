@@ -157,13 +157,13 @@ For testing purposes, the following accounts are available with restricted profi
 
 ### **Citizen Test Account**
 - **Email:** `citizen@gmail.com`
-- **Password:** <span title="Click to reveal" style="cursor: pointer; user-select: none; background: #374151; padding: 2px 6px; border-radius: 4px; font-family: monospace;" onclick="this.textContent='Citizen@123'; this.style.background='#059669'; this.title='Password revealed!'">••••••••••</span> *(Click to reveal)*
+- **Password:** `Citizen@123`
 - **Role:** Citizen
 - **Profile Restrictions:** Name and contact number fields are locked and cannot be edited
 
 ### **Volunteer Test Account**
 - **Email:** `volunteer@gmail.com`
-- **Password:** <span title="Click to reveal" style="cursor: pointer; user-select: none; background: #374151; padding: 2px 6px; border-radius: 4px; font-family: monospace;" onclick="this.textContent='Volunteer@123'; this.style.background='#059669'; this.title='Password revealed!'">••••••••••</span> *(Click to reveal)*
+- **Password:** `Volunteer@123`
 - **Role:** Volunteer
 - **Profile Restrictions:** Name and contact number fields are locked, but skills and location can still be updated
 
