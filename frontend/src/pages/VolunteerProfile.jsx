@@ -11,7 +11,8 @@ import {
   MapPin,
   HandHeart,
   Loader2,
-  ChevronDown
+  ChevronDown,
+  Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import seniorBackground from '../assets/seniordashboard.jpeg';
@@ -42,7 +43,8 @@ const VolunteerProfile = () => {
   const [location, setLocation] = useState(user?.location || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
-
+  // Check if user is a test account
+  const isTestAccount = user?.email === 'citizen@gmail.com' || user?.email === 'volunteer@gmail.com';
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -53,7 +55,29 @@ const VolunteerProfile = () => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     
-    // Validate phone number
+    // For test accounts, only allow updating skills and location
+    if (isTestAccount) {
+      setIsUpdating(true);
+      try {
+        await updateProfile({ 
+          name: user?.name, // Keep original name
+          contactno: user?.contactno, // Keep original contact number
+          skills: Array.isArray(skills) ? skills : [skills].filter(Boolean), 
+          location 
+        });
+        toast.success('Profile updated successfully! Redirecting...');
+        setTimeout(() => {
+          navigate('/volunteer-home');
+        }, 1500);
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to update profile. Please try again.');
+      } finally {
+        setIsUpdating(false);
+      }
+      return;
+    }
+    
+    // Validate phone number for non-test accounts
     const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(contactNo)) {
       toast.error('Please enter a valid 10-digit phone number');
@@ -189,6 +213,12 @@ const VolunteerProfile = () => {
               <motion.div variants={itemVariants}>
                 <label htmlFor="name" className="block text-sm font-medium text-indigo-100 mb-2">
                   Full Name
+                  {isTestAccount && (
+                    <span className="ml-2 inline-flex items-center gap-1 text-xs text-yellow-300">
+                      <Lock size={12} />
+                      Locked
+                    </span>
+                  )}
                 </label>
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-400/30 to-purple-600/30 rounded-xl blur opacity-0 group-hover:opacity-75 transition duration-200 group-hover:duration-300"></div>
@@ -201,9 +231,10 @@ const VolunteerProfile = () => {
                       id="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                      className={`w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${isTestAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
                       placeholder="Enter your full name"
                       required
+                      disabled={isTestAccount}
                     />
                   </div>
                 </div>
@@ -212,6 +243,12 @@ const VolunteerProfile = () => {
               <motion.div variants={itemVariants}>
                 <label htmlFor="contactNo" className="block text-sm font-medium text-indigo-100 mb-2">
                   Contact Number
+                  {isTestAccount && (
+                    <span className="ml-2 inline-flex items-center gap-1 text-xs text-yellow-300">
+                      <Lock size={12} />
+                      Locked
+                    </span>
+                  )}
                 </label>
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-400/30 to-purple-600/30 rounded-xl blur opacity-0 group-hover:opacity-75 transition duration-200 group-hover:duration-300"></div>
@@ -224,13 +261,26 @@ const VolunteerProfile = () => {
                       id="contactNo"
                       value={contactNo}
                       onChange={(e) => setContactNo(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                      className={`w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${isTestAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
                       placeholder="Your contact number"
                       required
+                      disabled={isTestAccount}
                     />
                   </div>
                 </div>
               </motion.div>
+
+              {isTestAccount && (
+                <motion.div 
+                  variants={itemVariants}
+                  className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl"
+                >
+                  <div className="flex items-center gap-2 text-yellow-300 text-sm">
+                    <Lock size={16} />
+                    <span>Test account detected. Name and contact number are locked. You can still update skills and location.</span>
+                  </div>
+                </motion.div>
+              )}
 
               <motion.div variants={itemVariants}>
                 <label className="block text-sm font-medium text-indigo-100 mb-3">
@@ -280,28 +330,24 @@ const VolunteerProfile = () => {
                       id="location"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full pl-10 pr-10 py-3 bg-gradient-to-r from-indigo-900/80 to-purple-900/80 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none transition-colors"
-                      style={{
-                        backgroundColor: "rgba(30, 27, 75, 0.7)",
-                        color: "#fff",
-                      }}
+                      className="w-full pl-10 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none transition-colors"
                       required
                     >
-                      <option value="" className="bg-indigo-900 text-white">Select your location</option>
-                      <option value="Thiruvananthapuram" className="bg-indigo-900 text-white">Thiruvananthapuram</option>
-                      <option value="Kollam" className="bg-indigo-900 text-white">Kollam</option>
-                      <option value="Alappuzha" className="bg-indigo-900 text-white">Alappuzha</option>
-                      <option value="Pathanamthitta" className="bg-indigo-900 text-white">Pathanamthitta</option>
-                      <option value="Kottayam" className="bg-indigo-900 text-white">Kottayam</option>
-                      <option value="Idukki" className="bg-indigo-900 text-white">Idukki</option>
-                      <option value="Ernakulam" className="bg-indigo-900 text-white">Ernakulam</option>
-                      <option value="Thrissur" className="bg-indigo-900 text-white">Thrissur</option>
-                      <option value="Palakkad" className="bg-indigo-900 text-white">Palakkad</option>
-                      <option value="Malappuram" className="bg-indigo-900 text-white">Malappuram</option>
-                      <option value="Kozhikode" className="bg-indigo-900 text-white">Kozhikode</option>
-                      <option value="Wayanad" className="bg-indigo-900 text-white">Wayanad</option>
-                      <option value="Kannur" className="bg-indigo-900 text-white">Kannur</option>
-                      <option value="Kasaragod" className="bg-indigo-900 text-white">Kasaragod</option>
+                      <option value="" className="bg-indigo-900/90 text-white">Select your location</option>
+                      <option value="Thiruvananthapuram" className="bg-indigo-900/90 text-white">Thiruvananthapuram</option>
+                      <option value="Kollam" className="bg-indigo-900/90 text-white">Kollam</option>
+                      <option value="Alappuzha" className="bg-indigo-900/90 text-white">Alappuzha</option>
+                      <option value="Pathanamthitta" className="bg-indigo-900/90 text-white">Pathanamthitta</option>
+                      <option value="Kottayam" className="bg-indigo-900/90 text-white">Kottayam</option>
+                      <option value="Idukki" className="bg-indigo-900/90 text-white">Idukki</option>
+                      <option value="Ernakulam" className="bg-indigo-900/90 text-white">Ernakulam</option>
+                      <option value="Thrissur" className="bg-indigo-900/90 text-white">Thrissur</option>
+                      <option value="Palakkad" className="bg-indigo-900/90 text-white">Palakkad</option>
+                      <option value="Malappuram" className="bg-indigo-900/90 text-white">Malappuram</option>
+                      <option value="Kozhikode" className="bg-indigo-900/90 text-white">Kozhikode</option>
+                      <option value="Wayanad" className="bg-indigo-900/90 text-white">Wayanad</option>
+                      <option value="Kannur" className="bg-indigo-900/90 text-white">Kannur</option>
+                      <option value="Kasaragod" className="bg-indigo-900/90 text-white">Kasaragod</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <ChevronDown className="h-5 w-5 text-indigo-400" />

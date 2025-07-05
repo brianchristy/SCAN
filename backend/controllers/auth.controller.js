@@ -225,16 +225,27 @@ export const updateProfile = async (req, res) => {
     // Save user
     await user.save();
 
-    // Send full user details including isVerified
+    // Send full user details including isVerified and category
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
       user: {
+        _id: user._id,
         name: user.name,
+        email: user.email,
         contactno: user.contactno,
+        category: user.category,
         skills: user.skills || [],
         location: user.location || null,
-        isVerified: user.isVerified, // Ensure isVerified is included
+        isVerified: user.isVerified,
+        isBanned: user.isBanned,
+        helptitle: user.helptitle,
+        helpdescription: user.helpdescription,
+        additional: user.additional,
+        helpdate: user.helpdate,
+        helptime: user.helptime,
+        helpstatus: user.helpstatus,
+        volunteerDetails: user.volunteerDetails,
       },
     });
   } catch (error) {

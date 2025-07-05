@@ -151,6 +151,39 @@ Access to Volunteer Dashboard
 
 ---
 
+## **Test Accounts**
+
+For testing purposes, the following accounts are available with restricted profile editing capabilities:
+
+### **Citizen Test Account**
+- **Email:** `citizen@gmail.com`
+- **Password:** <span title="Click to reveal" style="cursor: pointer; user-select: none; background: #374151; padding: 2px 6px; border-radius: 4px; font-family: monospace;" onclick="this.textContent='Citizen@123'; this.style.background='#059669'; this.title='Password revealed!'">••••••••••</span> *(Click to reveal)*
+- **Role:** Citizen
+- **Profile Restrictions:** Name and contact number fields are locked and cannot be edited
+
+### **Volunteer Test Account**
+- **Email:** `volunteer@gmail.com`
+- **Password:** <span title="Click to reveal" style="cursor: pointer; user-select: none; background: #374151; padding: 2px 6px; border-radius: 4px; font-family: monospace;" onclick="this.textContent='Volunteer@123'; this.style.background='#059669'; this.title='Password revealed!'">••••••••••</span> *(Click to reveal)*
+- **Role:** Volunteer
+- **Profile Restrictions:** Name and contact number fields are locked, but skills and location can still be updated
+
+### **Test Account Features**
+- ✅ **Login Access:** Both accounts can log in normally
+- ✅ **Dashboard Access:** Full access to respective dashboards
+- ✅ **Help Request System:** Can create and manage help requests (citizen)
+- ✅ **Volunteer Services:** Can browse and accept requests (volunteer)
+- 🔒 **Profile Restrictions:** Name and contact number are protected from editing
+- ⚠️ **Visual Indicators:** Lock icons and warning messages indicate restricted fields
+
+### **Testing Scenarios**
+1. **Login Testing:** Use these accounts to test the login system
+2. **Role-based Access:** Verify different dashboard access for each role
+3. **Profile Update Restrictions:** Test that restricted fields cannot be modified
+4. **Help Request Flow:** Test the complete help request lifecycle
+5. **UI/UX Testing:** Verify visual indicators for restricted fields
+
+---
+
 ## **Project Structure**
 
 ```

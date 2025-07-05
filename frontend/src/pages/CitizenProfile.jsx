@@ -10,7 +10,8 @@ import {
   Check, 
   Loader2,
   ChevronDown,
-  HeartPulse
+  HeartPulse,
+  Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import seniorBackground from '../assets/volunteerdashboard.jpeg';
@@ -39,6 +40,9 @@ const CitizenProfile = () => {
   const [contactNo, setContactNo] = useState(user?.contactno || '');
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Check if user is a test account
+  const isTestAccount = user?.email === 'citizen@gmail.com' || user?.email === 'volunteer@gmail.com';
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -47,6 +51,12 @@ const CitizenProfile = () => {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    
+    // Prevent updates for test accounts
+    if (isTestAccount) {
+      toast.error('Test accounts cannot update their profile information');
+      return;
+    }
     
     // Validate phone number
     const phoneRegex = /^\d{10}$/;
@@ -62,7 +72,6 @@ const CitizenProfile = () => {
         contactno: contactNo, // Match backend field name
         location: user?.location || '' // Include location if it exists
       });
-      await checkAuth();
       toast.success('Profile updated successfully! Redirecting...');
       setTimeout(() => {
         navigate('/citizen-home');
@@ -176,6 +185,12 @@ const CitizenProfile = () => {
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-blue-100/80 mb-1.5 pl-1">
                     Full Name
+                    {isTestAccount && (
+                      <span className="ml-2 inline-flex items-center gap-1 text-xs text-yellow-300">
+                        <Lock size={12} />
+                        Locked
+                      </span>
+                    )}
                   </label>
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400/30 to-blue-600/30 rounded-xl blur opacity-0 group-hover:opacity-75 transition duration-200 group-hover:duration-300"></div>
@@ -187,9 +202,10 @@ const CitizenProfile = () => {
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-blue-500/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                        className={`w-full pl-10 pr-4 py-3 bg-white/5 border border-blue-500/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm ${isTestAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
                         placeholder="Enter your full name"
                         required
+                        disabled={isTestAccount}
                       />
                     </div>
                   </div>
@@ -198,6 +214,12 @@ const CitizenProfile = () => {
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-blue-100/80 mb-1.5 pl-1">
                     Contact Number
+                    {isTestAccount && (
+                      <span className="ml-2 inline-flex items-center gap-1 text-xs text-yellow-300">
+                        <Lock size={12} />
+                        Locked
+                      </span>
+                    )}
                   </label>
                   <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400/30 to-blue-600/30 rounded-xl blur opacity-0 group-hover:opacity-75 transition duration-200 group-hover:duration-300"></div>
@@ -209,25 +231,43 @@ const CitizenProfile = () => {
                         type="tel"
                         value={contactNo}
                         onChange={(e) => setContactNo(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-blue-500/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
+                        className={`w-full pl-10 pr-4 py-3 bg-white/5 border border-blue-500/20 rounded-xl text-white placeholder-blue-200/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent transition-all duration-200 backdrop-blur-sm ${isTestAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
                         placeholder="Enter your contact number"
                         required
+                        disabled={isTestAccount}
                       />
                     </div>
                   </div>
                 </div>
 
+                {isTestAccount && (
+                  <motion.div 
+                    variants={itemVariants}
+                    className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl"
+                  >
+                    <div className="flex items-center gap-2 text-yellow-300 text-sm">
+                      <Lock size={16} />
+                      <span>Test account detected. Name and contact number are locked for security.</span>
+                    </div>
+                  </motion.div>
+                )}
+
                 <motion.div variants={itemVariants} className="pt-6">
                   <button
                     type="submit"
-                    disabled={isUpdating}
-                    className="group relative w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                    disabled={isUpdating || isTestAccount}
+                    className={`group relative w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${isTestAccount ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span className="relative z-10 flex items-center gap-2">
                       {isUpdating ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin" />
                           Updating...
+                        </>
+                      ) : isTestAccount ? (
+                        <>
+                          <Lock className="h-5 w-5" />
+                          <span>Update Disabled</span>
                         </>
                       ) : (
                         <>
