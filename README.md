@@ -195,12 +195,6 @@ SCAN (Senior Citizen Assistance Network) is a comprehensive platform designed to
 
 ## 🧪 **Test Accounts**
 
-<div align="center">
-
-![Test Accounts](https://img.shields.io/badge/Test%20Accounts-Available-brightgreen?style=for-the-badge)
-
-</div>
-
 For testing purposes, the following accounts are available with restricted profile editing capabilities:
 
 ### **👥 Citizen Test Account**
