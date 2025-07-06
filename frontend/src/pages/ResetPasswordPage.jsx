@@ -50,13 +50,14 @@ const ResetPasswordPage = () => {
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         {message && <p className="text-green-500 text-sm mb-4">{message}</p>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="on" method="post">
           <Input
             icon={Lock}
             type="password"
             placeholder="New Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
 
@@ -66,6 +67,7 @@ const ResetPasswordPage = () => {
             placeholder="Confirm New Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
             required
           />
 

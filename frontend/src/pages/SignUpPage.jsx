@@ -490,7 +490,7 @@ const SignUpPage = () => {
 
           {/* Form */}
           <div className="px-8 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on" method="post">
               <motion.div variants={itemVariants}>
                 <Input
                   icon={User}
@@ -501,6 +501,7 @@ const SignUpPage = () => {
                   label="Full Name"
                   placeholder="Enter your full name"
                   error={errors.name}
+                  autoComplete="name"
                   required
                 />
               </motion.div>
@@ -515,6 +516,7 @@ const SignUpPage = () => {
                   label="Email Address"
                   placeholder="Enter your email"
                   error={errors.email}
+                  autoComplete="email"
                   required
                 />
               </motion.div>
@@ -529,6 +531,7 @@ const SignUpPage = () => {
                   label="Password"
                   placeholder="Enter your password"
                   error={errors.password}
+                  autoComplete="new-password"
                   required
                 />
                 <PasswordConstraints 
@@ -547,6 +550,7 @@ const SignUpPage = () => {
                   label="Confirm Password"
                   placeholder="Re-enter your password"
                   error={errors.confirmPassword}
+                  autoComplete="new-password"
                   required
                 />
                 <ConfirmPasswordCheck password={formData.password} confirmPassword={formData.confirmPassword} />
@@ -562,6 +566,7 @@ const SignUpPage = () => {
                   label="Phone Number"
                   placeholder="Enter your phone number"
                   error={errors.contactno}
+                  autoComplete="tel"
                   required
                 />
               </motion.div>

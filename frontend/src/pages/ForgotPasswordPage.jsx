@@ -30,7 +30,7 @@ const ForgotPasswordPage = () => {
         </h2>
 
         {!isSubmitted ? (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} autoComplete="on" method="post">
             <p className="text-black mb-6 text-center">
               Enter your email address and we'll send you a link to reset your
               password.
@@ -41,6 +41,7 @@ const ForgotPasswordPage = () => {
               placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
             />
             <motion.button

@@ -31,6 +31,7 @@ SCAN (Senior Citizen Assistance Network) is a comprehensive platform designed to
 - 🔢 **Completion Code System:** 6-digit verification code for request completion
 - ⏰ **Request Scheduling:** Schedule requests at least 3 hours in advance
 - 👤 **Profile Management:** Update personal information and preferences
+- 🔄 **Password Recovery:** Forgot password functionality (currently under development)
 
 ### 🤝 **For Volunteers**
 - 📋 **Volunteer Registration:** Apply to become a volunteer with admin approval

@@ -89,7 +89,6 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false,
   });
   const [errors, setErrors] = useState({});
   const { login, isLoading, error, isAuthenticated } = useAuthStore();
@@ -221,7 +220,7 @@ const LoginPage = () => {
 
           {/* Form */}
           <div className="px-8 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on" method="post">
               <motion.div variants={itemVariants}>
                 <Input
                   icon={Mail}
@@ -251,21 +250,9 @@ const LoginPage = () => {
               </motion.div>
 
               <motion.div 
-                className="flex items-center justify-between"
+                className="flex items-center justify-end"
                 variants={itemVariants}
               >
-                <div className="flex items-center space-x-2">
-                  <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="rememberMe"
-                        checked={formData.rememberMe}
-                      onChange={handleChange}
-                      className="w-4 h-4 rounded border border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-200 select-none">Remember me</span>
-                  </label>
-                </div>
                 <Link 
                   to="/forgot-password" 
                   className="text-sm text-gray-500 cursor-not-allowed opacity-50 pointer-events-none"
