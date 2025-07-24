@@ -15,7 +15,6 @@ const ScrollToTop = () => {
 import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -23,6 +22,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import SignupSuccessPage from "./pages/SignupSuccessPage";
 import EmailVerifiedSuccessPage from "./pages/EmailVerifiedSuccessPage";
 import VolunteerPendingApprovalPage from "./pages/VolunteerPendingApprovalPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./store/authStore";
@@ -163,15 +163,6 @@ function App() {
         />
         <Route path="/verify-email" element={<EmailVerificationPage />} />
         <Route
-          path="/forgot-password"
-          element={
-            <RedirectAuthenticatedUser>
-              <ForgotPasswordPage />
-            </RedirectAuthenticatedUser>
-          }
-        />
-
-        <Route
           path="/reset-password/:token"
           element={
             <RedirectAuthenticatedUser>
@@ -184,6 +175,14 @@ function App() {
         <Route path="/email-verified-success" element={<EmailVerifiedSuccessPage />} />
         <Route path="/about" element={<AboutUsPage />} />
         <Route path="/contact" element={<ContactUsPage />} />
+        <Route
+          path="/forgot-password"
+          element={
+            <RedirectAuthenticatedUser>
+              <ForgotPasswordPage />
+            </RedirectAuthenticatedUser>
+          }
+        />
         {/* catch all routes */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

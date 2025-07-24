@@ -5,7 +5,6 @@ import {
   signup,
   updateProfile,
   verifyEmail,
-  forgotPassword,
   resetPassword,
   checkAuth,
   help,
@@ -14,7 +13,8 @@ import {
   markHelpCompleted,
   getMe,
   refreshToken,
-  checkExpiredHelpRequests
+  checkExpiredHelpRequests,
+  forgotPassword
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 

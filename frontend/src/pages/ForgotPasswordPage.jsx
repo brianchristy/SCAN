@@ -1,89 +1,178 @@
-import { motion } from "framer-motion";
 import { useState } from "react";
-import { useAuthStore } from "../store/authStore";
-import Input from "../components/Input";
-import { ArrowLeft, Loader, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Mail, Loader, AlertCircle, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
+import backgroundImage from "../assets/signup-bg.jpg";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  show: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } },
+};
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const { isLoading, forgotPassword } = useAuthStore();
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await forgotPassword(email);
-    setIsSubmitted(true);
+    setError("");
+    if (!email) {
+      setError("Email is required");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Something went wrong");
+        toast.error(data.message || "Something went wrong");
+      } else {
+        setSuccess(true);
+        toast.success("Password reset email sent! Check your inbox.");
+      }
+    } catch (err) {
+      setError("Something went wrong");
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleHomeClick = () => {
+    navigate("/");
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-md w-full bg-blue-300 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden"
+    <div className="min-h-screen flex items-center justify-center bg-fixed bg-cover bg-center p-4 relative"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
     >
-      <div className="p-8">
-        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700 bg-clip-text">
-          Forgot Password
-        </h2>
-
-        {!isSubmitted ? (
-          <form onSubmit={handleSubmit} autoComplete="on" method="post">
-            <p className="text-black mb-6 text-center">
-              Enter your email address and we'll send you a link to reset your
-              password.
-            </p>
-            <Input
-              icon={Mail}
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-            />
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-3 px-4 bg-blue-700 text-white font-boldfont-bold rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 "
-              type="submit"
-            >
-              {isLoading ? (
-                <Loader className="size-6 animate-spin mx-auto" />
-              ) : (
-                "Send Reset Link"
-              )}
-            </motion.button>
-          </form>
-        ) : (
-          <div className="text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4"
-            >
-              <Mail className="h-8 w-8 text-white" />
-            </motion.div>
-            <p className="text-black mb-6">
-              If an account exists for {email}, you will receive a password
-              reset link shortly.
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="px-8 py-4 bg-white  flex justify-center">
-        <Link
-          to={"/login"}
-          className="text-sm text-blue-700 hover:underline flex items-center"
+      <Toaster position="top-center" />
+      {/* Home Button */}
+      <motion.div 
+        className="absolute top-6 left-6 z-20"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <button
+          onClick={handleHomeClick}
+          className="flex items-center group"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Login
-        </Link>
-      </div>
-    </motion.div>
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 group-hover:border-blue-400/50 transition-colors duration-200">
+            <Home className="h-5 w-5 text-white group-hover:text-blue-300 transition-colors duration-200" />
+          </div>
+          <span className="ml-3 text-white font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            Back to Home
+          </span>
+        </button>
+      </motion.div>
+      <motion.div 
+        className="w-full max-w-md"
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div 
+          className="bg-gradient-to-br from-blue-900/80 to-indigo-900/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-white/10"
+          variants={itemVariants}
+        >
+          <div className="p-8 text-center">
+            <motion.div variants={itemVariants}>
+              <h1 className="text-3xl font-bold text-white mb-2">Forgot Password</h1>
+              <p className="text-blue-200">Enter your registered email to receive a password reset link.</p>
+            </motion.div>
+          </div>
+          <div className="px-8 pb-8">
+            {success ? (
+              <div className="text-green-300 text-center py-6">
+                <p>Password reset email sent! Check your inbox.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on" method="post">
+                <motion.div variants={itemVariants}>
+                  <label className="block text-sm font-medium text-gray-200 mb-1.5">Email Address</label>
+                  <div className={`flex items-center px-4 py-3 rounded-xl border-2 transition-all duration-200 ${error ? 'border-red-500 bg-red-50/10' : 'border-gray-200/20 bg-white/5 hover:border-blue-300/50'}`}>
+                    <Mail className={`h-5 w-5 ${error ? 'text-red-400' : 'text-blue-300'}`} />
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Enter your registered email"
+                      className="w-full ml-3 bg-transparent outline-none text-white placeholder-gray-300"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      autoComplete="email"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  {error && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-1 text-sm text-red-400 flex items-center"
+                    >
+                      <AlertCircle size={14} className="mr-1" /> {error}
+                    </motion.p>
+                  )}
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <motion.button
+                    type="submit"
+                    disabled={isLoading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`w-full py-3 px-4 rounded-xl text-white font-medium shadow-lg transition-all duration-200 ${
+                      isLoading 
+                        ? 'bg-blue-600 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+                    }`}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader className="animate-spin h-5 w-5 mr-2" />
+                        Sending...
+                      </div>
+                    ) : (
+                      'Send Reset Link'
+                    )}
+                  </motion.button>
+                </motion.div>
+              </form>
+            )}
+            <motion.div className="mt-6 text-center" variants={itemVariants}>
+              <Link to="/login" className="text-blue-300 font-medium hover:text-white transition-colors">
+                Back to Login
+              </Link>
+            </motion.div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 };
-export default ForgotPasswordPage;
+
+export default ForgotPasswordPage; 

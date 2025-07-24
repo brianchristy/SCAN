@@ -55,7 +55,7 @@ export const signup = async (req, res) => {
         subject: 'Verify your email for SCAN',
         html: `<p>Hello ${user.name || ''},</p>
           <p>Thank you for signing up for SCAN. Please verify your email by clicking the link below:</p>
-          <p><a href="${verifyUrl}">Click on this link to verify your email.</a></p>
+          <p><a href="${verifyUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Verify Email</a></p>
           <p>If you did not sign up, you can ignore this email.</p>`
       });
       res.status(201).json({
@@ -84,7 +84,7 @@ export const signup = async (req, res) => {
         subject: 'Verify your email for SCAN',
         html: `<p>Hello ${user.name || ''},</p>
           <p>Thank you for signing up as a volunteer for SCAN. Please verify your email by clicking the link below:</p>
-          <p><a href="${verifyUrl}">Click on this link to verify your email.</a></p>
+          <p><a href="${verifyUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Verify Email</a></p>
           <p>If you did not sign up, you can ignore this email.</p>`
       });
       res.status(201).json({
@@ -258,72 +258,27 @@ export const updateProfile = async (req, res) => {
 };
 
 
-export const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-
-    // Save reset token to user
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = resetTokenExpiry;
-    await user.save();
-
-    // Send reset email
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    const emailHtml = `
-      <h2>Password Reset Request</h2>
-      <p>You requested a password reset for your SCAN account.</p>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
-      <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request this, please ignore this email.</p>
-    `;
-
-    await sendEmail({
-      to: email,
-      subject: "Password Reset Request - SCAN",
-      html: emailHtml,
-    });
-
-    res.status(200).json({ message: "Password reset email sent" });
-  } catch (error) {
-    res.status(500).json({ message: "Error sending reset password email" });
-  }
-};
-
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
-
+    // Hash the token for lookup
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
     // Find user by reset token
     const user = await User.findOne({
-      resetToken: token,
-      resetTokenExpiry: { $gt: Date.now() },
+      resetPasswordToken: tokenHash,
+      resetPasswordExpiresAt: { $gt: Date.now() },
     });
-
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired reset token" });
     }
-
     // Hash new password
     const hashedPassword = await bcryptjs.hash(password, 12);
-
     // Update user password and clear reset token
     user.password = hashedPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
     await user.save();
-
     res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
     res.status(500).json({ message: "Error resetting password" });
@@ -528,7 +483,7 @@ export const vhelp = async (req, res) => {
         <li><strong>Location:</strong> ${seniorCitizen.location}</li>
       </ul>
       
-      <p>You can log in to your account to view more details: <a href="${process.env.FRONTEND_URL}/login">Login to SCAN</a></p>
+      <p>You can log in to your account to view more details: <a href="${process.env.FRONTEND_URL}/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to SCAN</a></p>
       
       <p>Thank you for using SCAN!</p>
     `;
@@ -613,7 +568,7 @@ export const markHelpCompleted = async (req, res) => {
       
       <p>Thank you for using SCAN! We hope you received the help you needed.</p>
       
-      <p>You can log in to your account to request more help: <a href="${process.env.FRONTEND_URL}/login">Login to SCAN</a></p>
+      <p>You can log in to your account to request more help: <a href="${process.env.FRONTEND_URL}/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to SCAN</a></p>
     `;
 
     await sendEmail({
@@ -689,6 +644,44 @@ export const refreshToken = async (req, res) => {
   }
 };
 
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "No such user exists" });
+    }
+    // Generate reset token and expiry
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const resetPasswordExpiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+    user.resetPasswordToken = tokenHash;
+    user.resetPasswordExpiresAt = resetPasswordExpiresAt;
+    await user.save();
+    // Send reset email
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${rawToken}`;
+    const emailHtml = `
+      <h2>Password Reset Request</h2>
+      <p>You requested a password reset for your SCAN account.</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+    `;
+    await sendEmail({
+      to: email,
+      subject: "Password Reset Request - SCAN",
+      html: emailHtml,
+    });
+    res.status(200).json({ message: "Password reset email sent" });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending reset password email" });
+  }
+};
+
 // Helper to convert a Date object to IST (UTC+5:30)
 function toIST(date) {
   return new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
@@ -727,7 +720,7 @@ export const checkExpiredHelpRequests = async () => {
                 <li><strong>Time:</strong> ${request.helptime}</li>
                 <li><strong>Location:</strong> ${request.location}</li>
               </ul>
-              <p>You can create a new help request at any time: <a href="${process.env.FRONTEND_URL}/login">Login to SCAN</a></p>
+              <p>You can create a new help request at any time: <a href="${process.env.FRONTEND_URL}/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Login to SCAN</a></p>
               <p>Thank you for using SCAN!</p>
             `;
             await sendEmail({

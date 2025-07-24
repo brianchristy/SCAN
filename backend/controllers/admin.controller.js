@@ -41,7 +41,7 @@ export const approveVolunteer = async (req, res) => {
              <p>Your volunteer account for SCAN has been approved by an administrator.</p>
              <p>You can now log in to your account and start helping.</p>
              <p>
-               <a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log In to SCAN</a>
+               <a href="${process.env.CLIENT_URL}/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Log In to SCAN</a>
              </p>
              <p>Thank you for joining our community!</p>`
     });
@@ -263,7 +263,7 @@ export const unbanUser = async (req, res) => {
       html: `<p>Hello ${userToUnban.name},</p>
              <p>Your account on SCAN has been restored by an administrator. You can now log in and use the platform again.</p>
              <p>
-               <a href="${process.env.CLIENT_URL}/login" style="color: #4f46e5; text-decoration: underline;">Log In to SCAN</a>
+               <a href="${process.env.CLIENT_URL}/login" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Log In to SCAN</a>
              </p>
              <p>Thank you for your patience.</p>`
     });
