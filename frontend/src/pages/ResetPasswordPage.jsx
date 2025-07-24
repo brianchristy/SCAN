@@ -107,7 +107,8 @@ const ResetPasswordPage = () => {
             </motion.div>
           </div>
           <div className="px-8 pb-8">
-            {localError && localError !== 'No token provided' && (
+            {/* Only show backend error message if it is not a generic status code error */}
+            {localError && localError !== 'No token provided' && !localError.toLowerCase().includes('status code') && (
               <motion.p
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -116,7 +117,7 @@ const ResetPasswordPage = () => {
                 {localError}
               </motion.p>
             )}
-            {error && error !== 'No token provided' && (
+            {error && error !== 'No token provided' && !error.toLowerCase().includes('status code') && (
               <motion.p
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
