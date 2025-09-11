@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useAuthStore } from "../store/authStore";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import Input from "../components/Input";
-import { Lock, Home } from "lucide-react";
+import { Lock, Home, Check, X, AlertCircle } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import backgroundImage from "../assets/signup-bg.jpg";
 
@@ -30,17 +30,53 @@ const ResetPasswordPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
   const [localError, setLocalError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+
+  const validatePassword = (pwd) => {
+    const hasMinLength = pwd?.length >= 8;
+    const hasUppercase = /[A-Z]/.test(pwd);
+    const hasLowercase = /[a-z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+    
+    return {
+      isValid: hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar,
+      requirements: [
+        { text: 'At least 8 characters', valid: hasMinLength },
+        { text: 'At least one uppercase letter (A-Z)', valid: hasUppercase },
+        { text: 'At least one lowercase letter (a-z)', valid: hasLowercase },
+        { text: 'At least one number (0-9)', valid: hasNumber },
+        { text: 'At least one special character (!@#$%^&*)', valid: hasSpecialChar }
+      ]
+    };
+  };
+  
+  const passwordValidation = validatePassword(password);
 
   // Remove any logic or display for 'No token provided'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError("");
+    
     if (!password || !confirmPassword) {
       setLocalError("Please fill in all fields");
       toast.error("Please fill in all fields");
       return;
     }
+    
+    const { isValid, requirements } = passwordValidation;
+    if (!isValid) {
+      const missingRequirements = requirements
+        .filter(req => !req.valid)
+        .map(req => req.text)
+        .join(', ');
+      setLocalError(`Password does not meet requirements: ${missingRequirements}`);
+      toast.error("Please fix password requirements");
+      return;
+    }
+    
     if (password !== confirmPassword) {
       setLocalError("Passwords do not match");
       toast.error("Passwords do not match");
@@ -137,26 +173,77 @@ const ResetPasswordPage = () => {
             )}
             <form onSubmit={handleSubmit} autoComplete="on" method="post" className="space-y-6">
               <motion.div variants={itemVariants}>
-                <Input
-                  icon={Lock}
-                  type="password"
-                  placeholder="New Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    icon={Lock}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="New Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setShowPasswordRequirements(true)}
+                    onBlur={() => setShowPasswordRequirements(false)}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-blue-300 transition-colors"
+                  >
+                    {showPassword ? <X size={20} /> : <Lock size={20} />}
+                  </button>
+                </div>
+                
+                {showPasswordRequirements && (
+                  <div className="mt-2 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <p className="text-sm font-medium text-gray-300 mb-2">Password Requirements:</p>
+                    <ul className="space-y-1">
+                      {passwordValidation.requirements.map((req, idx) => (
+                        <li key={idx} className="flex items-center">
+                          <span className={`inline-flex items-center justify-center w-4 h-4 mr-2 rounded-full ${req.valid ? 'bg-green-500' : 'bg-red-500'}`}>
+                            {req.valid ? (
+                              <Check className="w-3 h-3 text-white" />
+                            ) : (
+                              <X className="w-3 h-3 text-white" />
+                            )}
+                          </span>
+                          <span className={`text-xs ${req.valid ? 'text-green-400' : 'text-red-400'}`}>
+                            {req.text}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Input
-                  icon={Lock}
-                  type="password"
-                  placeholder="Confirm New Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    icon={Lock}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Confirm New Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-blue-300 transition-colors"
+                  >
+                    {showPassword ? <X size={20} /> : <Lock size={20} />}
+                  </button>
+                </div>
+                {password && confirmPassword && password !== confirmPassword && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-sm text-red-400 flex items-center"
+                  >
+                    <AlertCircle size={14} className="mr-1" /> Passwords do not match
+                  </motion.p>
+                )}
               </motion.div>
               <motion.div variants={itemVariants}>
                 <motion.button
