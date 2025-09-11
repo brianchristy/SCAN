@@ -134,7 +134,7 @@ export const login = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "No account found with this email" });
     }
 
     // Check if user is banned
@@ -153,7 +153,7 @@ export const login = async (req, res) => {
     // Check password
     const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Incorrect password" });
     }
 
     // Generate tokens (not cookies)

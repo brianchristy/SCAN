@@ -178,21 +178,18 @@ export const useAuthStore = create((set, get) => ({
         if (error.response.status === 401) {
           if (error.response.data.message === 'Email not verified') {
             errorMessage = 'Please verify your email before logging in';
-          } else if (error.response.data.message === 'Invalid credentials') {
-            // Check if it's an email or password issue
-            // We'll need to check the specific error message from the server
-            if (error.response.data.error?.includes('email')) {
-              errorMessage = 'Incorrect email address';
-            } else {
-              errorMessage = 'Incorrect password';
-            }
-          } else if (error.response.data.message === 'User not found') {
+          } else if (error.response.data.message === 'Incorrect password') {
+            errorMessage = 'Incorrect password';
+          } else if (error.response.data.message === 'No account found with this email') {
             errorMessage = 'No account found with this email';
+          } else if (error.response.data.message === 'Invalid credentials') {
+            // Fallback for any other 401 errors
+            errorMessage = 'Invalid email or password';
           }
-        } else if (error.response.status === 404) {
-          errorMessage = 'No account found with this email';
+        } else if (error.response.status === 403 && error.response.data.isBanned) {
+          errorMessage = 'Your account has been suspended by an administrator';
         } else if (error.response.status === 400) {
-          errorMessage = 'Invalid email or password';
+          errorMessage = error.response.data.message || 'Invalid request';
         }
       } else if (error.request) {
         // The request was made but no response was received
